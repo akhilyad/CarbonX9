@@ -774,7 +774,8 @@ def main():
                     st.dataframe(emissions)
                     csv = emissions.to_csv(index=False)
                     st.download_button(label="Download as CSV", data=csv, file_name="emissions_report.csv", mime="text/csv")
-           Irr
+            else:
+                st.info("No emission data available.")
         except Exception as e:
             st.error(f"Error loading emissions: {e}")
     
