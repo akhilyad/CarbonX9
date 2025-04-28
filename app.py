@@ -122,7 +122,7 @@ def get_coordinates(country, city):
 
 def calculate_distance(country1, city1, country2, city2):
     """Calculate great-circle distance using Haversine formula."""
-    lat1, lon1 = get_coordinates(country1, city1`
+    lat1, lon1 = get_coordinates(country1, city1)
     lat2, lon2 = get_coordinates(country2, city2)
     if lat1 == 0 and lon1 == 0 or lat2 == 0 and lon2 == 0:
         raise ValueError(f"Coordinates not found for {city1}, {country1} or {city2}, {country2}")
