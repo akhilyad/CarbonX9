@@ -428,6 +428,7 @@ def main():
                     st.write("The distance between two cities is calculated using the **Haversine Formula**, which computes the great-circle distance between two points on a sphere (Earth).")
                     st.write("Formula: `a = sin²(Δlat/2) + cos(lat1) * cos(lat2) * sin²(Δlon/2)`")
                     st.write("`c = 2 * atan2(√a, √(1-a))`")
+                    st.write1024x768
                     st.write("`distance = R * c` (where R = 6371 km, Earth's radius)")
                     st.write(f"Coordinates used: {source_city} ({get_coordinates(source_country, source_city)}), {dest_city} ({get_coordinates(dest_country, dest_city)})")
                     
@@ -547,7 +548,7 @@ def main():
                             st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
                             st.write(f"- **{mode2}**: {dist2:.2f} km, CO₂: {co2_2:.2f} kg")
                         else:
-                            st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
+                            st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f] kg")
                     
                     with tab2:
                         fig = go.Figure()
@@ -670,7 +671,7 @@ def main():
                     source_country = row['source'].split(', ')[1]
                     source_city = row['source'].split(', ')[0]
                     dest_country = row['destination'].split(', ')[1]
-                    dest_city = row['destination  # Define destination country
+                    dest_city = row['destination'].split(', ')[0]  # Extract destination city
                     distance_km = row['distance_km']
                     weight_tons = row['weight_tons']
                     current_co2 = row['co2_kg']
@@ -737,24 +738,47 @@ def main():
                     
                     st.write(f"**Carbon Price (April 2025)**: {CARBON_PRICE_EUR_PER_TON:.2f} EUR/tCO₂ (EU ETS)")
                     st.write(f"**Converted Price**: {carbon_price_per_kg:.4f} {currency}/kg CO₂")
-                    st.write(f>...(continues)
+                    st.write(f"**Total Cost Savings**: {total_cost_savings:.2f} {currency} (based on {total_savings:.2f} kg CO₂ saved)")
+                    
+                    df_routes = pd.DataFrame(route_data)
+                    fig = go.Figure()
+                    fig.add_trace(go.Bar(
+                        x=df_routes['Old CO₂'],
+                        y=df_routes['Route'],
+                        orientation='h',
+                        name='Old Route CO₂ (kg)',
+                        marker_color='#FF4B4B'
+                    ))
+                    fig.add_trace(go.Bar(
+                        x=df_routes['New CO₂'],
+                        y=df_routes['Route'],
+                        orientation='h',
+                        name='New Route CO₂ (kg)',
+                        marker_color='#36A2EB'
+                    ))
+                    fig.update_layout(
+                        title="Old vs New Route CO₂ Emissions",
+                        barmode='group'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    st.dataframe(df_routes[['Route', 'Old Mode', 'Old Distance', 'Old CO₂', 'New Modes', 'New Distances', 'New CO₂', 'Savings']])
+                
+                with tab4:
+                    st.subheader("Detailed Data 📋")
+                    st.dataframe(emissions)
+                    
+                    csv = emissions.to_csv(index=False)
+                    st.download_button(
+                        label="Download as CSV",
+                        data=csv,
+                        file_name="emissions_report.csv",
+                        mime="text/csv"
+                    )
+            else:
+                st.info("No emission data available. Calculate some emissions first!")
+        except Exception as e:
+            st.error(f"Error loading emissions: {e}")
 
----
-
-### Explanation of Changes
-- **Fixed Syntax Error**: The incomplete line `st.session_state.dest_country = next(iter` was corrected to `st.session_state.dest_country = next(iter(LOCATIONS))` to properly assign the first country from `LOCATIONS`.
-- **Retained All Previous Fixes**: All previous bug fixes (e.g., database error handling, removal of default distance, validation of transport modes, map centering, division by zero checks) are included.
-- **Added Input Validation**: Ensured `weight_tons` has a maximum value (`max_value=100000.0`) to prevent unrealistic inputs.
-- **Improved Error Handling**: Added try-except blocks around critical operations (e.g., distance calculation, CO₂ calculation, route optimization) to display user-friendly errors.
-- **Added Spinner**: Included `st.spinner` for map rendering to improve user experience.
-
----
-
-### CLI to Host on Streamlit Community Cloud
-
-To host this corrected `app.py` on Streamlit Community Cloud, follow these steps (repeated from the previous response for completeness):
-
-1. **Create Project Directory**:
-   ```bash
-   mkdir co2-emission-calculator
-   cd co2-emission-calculator
+if __name__ == "__main__":
+    main()
