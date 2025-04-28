@@ -1309,4 +1309,30 @@ def main():
         tab1, tab2 = st.tabs(["Savings Breakdown", "Smart System Impact"])
         
         with tab1:
-            if co2_savings_kg > 0 or energy_savings_kwh > 0;
+            if co2_savings_kg > 0 or energy_savings_kwh > 0:
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=[co2_savings_kg],
+                    y=['Smart Systems'],
+                    name="CO₂ Savings (kg)"
+                ))
+                fig.add_trace(go.Bar(
+                    x=[energy_savings_kwh],
+                    y=['Smart Systems'],
+                    name="Energy Savings (kWh)"
+                ))
+                fig.update_layout(title="Savings from Smart Systems", barmode='group')
+                st.plotly_chart(fig, use_container_width=True, key=f"energy_savings_breakdown_{time.time()}")
+            else:
+                st.info("No savings to display. Increase Smart System Usage.")
+        
+        with tab2:
+            usage_levels = [i / 100 for i in range(0, 101, 10)]  # 0% to 100% in 10% steps
+            co2_trend = [facility_size_m2 * 120 * usage * 0.4 * 0.5 for usage in usage_levels]  # CO₂ savings
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=[u * 100 for u in usage_levels], y=co2_trend, mode='lines+markers', name='CO₂ Savings (kg)'))
+            fig.update_layout(title="CO₂ Savings vs Smart System Usage", xaxis_title="Usage (%)", yaxis_title="CO₂ Savings (kg)")
+            st.plotly_chart(fig, use_container_width=True, key=f"energy_smart_system_impact_{time.time()}")
+
+if __name__ == "__main__":
+    main()
