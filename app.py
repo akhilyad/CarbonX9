@@ -20,7 +20,7 @@ def init_db():
     try:
         with sqlite3.connect('emissions.db') as conn:
             c = conn.cursor()
-            # Create suppliers table
+            # Create suppliers table with sustainable_practices column
             c.execute('''CREATE TABLE IF NOT EXISTS suppliers 
                         (id TEXT PRIMARY KEY, supplier_name TEXT, country TEXT, city TEXT, 
                          material TEXT, green_score INTEGER, annual_capacity_tons INTEGER, 
@@ -122,7 +122,7 @@ def get_coordinates(country, city):
 
 def calculate_distance(country1, city1, country2, city2):
     """Calculate great-circle distance using Haversine formula."""
-    lat1, lon1 = get_coordinates(country1, city1)
+    lat1, lon1 = get_coordinates(country1, city1`
     lat2, lon2 = get_coordinates(country2, city2)
     if lat1 == 0 and lon1 == 0 or lat2 == 0 and lon2 == 0:
         raise ValueError(f"Coordinates not found for {city1}, {country1} or {city2}, {country2}")
@@ -300,7 +300,6 @@ def get_suppliers(country=None, city=None, material=None, min_green_score=0):
 
 def calculate_warehouse_savings(warehouse_size_m2, led_percentage, solar_percentage):
     """Calculate CO₂ savings from green warehousing technologies."""
-    # Assumptions: 100 kWh/m²/year for traditional warehouse, 50% savings with LED, 30% with solar
     traditional_energy_kwh = warehouse_size_m2 * 100
     led_savings_kwh = traditional_energy_kwh * led_percentage * 0.5
     solar_savings_kwh = traditional_energy_kwh * solar_percentage * 0.3
@@ -904,7 +903,6 @@ def main():
             smart_system_usage = st.slider("Smart System Usage (%)", 0, 100, 50) / 100
         
         with col2:
-            # Assumption: 120 kWh/m²/year, 40% savings with smart systems
             energy_savings_kwh = facility_size_m2 * 120 * smart_system_usage * 0.4
             co2_savings_kg = energy_savings_kwh * 0.5  # 0.5 kg CO₂ per kWh
             st.metric("CO₂ Savings", f"{co2_savings_kg:.2f} kg/year")
