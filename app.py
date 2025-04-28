@@ -428,7 +428,6 @@ def main():
                     st.write("The distance between two cities is calculated using the **Haversine Formula**, which computes the great-circle distance between two points on a sphere (Earth).")
                     st.write("Formula: `a = sin²(Δlat/2) + cos(lat1) * cos(lat2) * sin²(Δlon/2)`")
                     st.write("`c = 2 * atan2(√a, √(1-a))`")
-                    st.write1024x768
                     st.write("`distance = R * c` (where R = 6371 km, Earth's radius)")
                     st.write(f"Coordinates used: {source_city} ({get_coordinates(source_country, source_city)}), {dest_city} ({get_coordinates(dest_country, dest_city)})")
                     
@@ -548,7 +547,7 @@ def main():
                             st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
                             st.write(f"- **{mode2}**: {dist2:.2f} km, CO₂: {co2_2:.2f} kg")
                         else:
-                            st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f] kg")
+                            st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
                     
                     with tab2:
                         fig = go.Figure()
