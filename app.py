@@ -320,7 +320,7 @@ def calculate_load_optimization(weight_tons, vehicle_capacity_tons, avg_trip_dis
 def main():
     st.set_page_config(page_title="CO₂ Emission Calculator", layout="wide")
     
-    # Apply custom CSS for button styling
+    # Apply custom CSS for button and sidebar styling
     st.markdown("""
         <style>
         .stButton > button {
@@ -338,6 +338,25 @@ def main():
         .stButton > button:hover {
             background-color: #C8E6C9;
         }
+        /* Style the sidebar radio buttons */
+        div[data-testid="stSidebar"] {
+            background-color: #F5F5F5;
+        }
+        div[data-testid="stSidebar"] .stRadio > label {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            width: 100%;
+            text-align: center;
+        }
+        div[data-testid="stSidebar"] .stRadio > label:hover {
+            background-color: #C8E6C9;
+        }
+        div[data-testid="stSidebar"] .stRadio > label[data-baseweb="radio"] > div {
+            border-color: #2E7D32;
+        }
         </style>
     """, unsafe_allow_html=True)
     
@@ -353,64 +372,57 @@ def main():
     if 'weight_tons' not in st.session_state:
         st.session_state.weight_tons = 1.0
 
-    # Navigation bar
-    col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11 = st.columns([2.5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    
-    with col1:
+    # Sidebar navigation
+    with st.sidebar:
         st.markdown(
             """
-            <div style='display: flex; align-items: center;'>
-                <h1 style='margin: 0; font-size: 28px; color: #2E7D32;'>Carbon 360</h1>
+            <div style='display: flex; align-items: center; padding: 10px;'>
+                <h2 style='margin: 0; font-size: 24px; color: #2E7D32;'>Carbon 360</h2>
             </div>
+            <hr style='margin: 10px 0;'>
             """,
             unsafe_allow_html=True
         )
-    
-    with col2:
-        if st.button("Calculate Emissions", key="nav_calculate"):
-            st.session_state.page = "Calculate Emissions"
-    
-    with col3:
-        if st.button("Route Visualizer", key="nav_route"):
-            st.session_state.page = "Route Visualizer"
-    
-    with col4:
-        if st.button("Supplier Lookup", key="nav_supplier"):
-            st.session_state.page = "Supplier Lookup"
-    
-    with col5:
-        if st.button("Reports", key="nav_reports"):
-            st.session_state.page = "Reports"
-    
-    with col6:
-        if st.button("Optimized Routes", key="nav_optimized"):
-            st.session_state.page = "Optimized Route Planning"
-    
-    with col7:
-        if st.button("Green Warehousing", key="nav_warehouse"):
-            st.session_state.page = "Green Warehousing"
-    
-    with col8:
-        if st.button("Sustainable Packaging", key="nav_packaging"):
-            st.session_state.page = "Sustainable Packaging"
-    
-    with col9:
-        if st.button("Carbon Offsetting", key="nav_offset"):
-            st.session_state.page = "Carbon Offsetting"
-    
-    with col10:
-        if st.button("Load Management", key="nav_load"):
-            st.session_state.page = "Efficient Load Management"
-    
-    with col11:
-        if st.button("Energy Conservation", key="nav_energy"):
-            st.session_state.page = "Energy Conservation"
-    
-    st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
+        page = st.radio(
+            "Navigate",
+            [
+                "Calculate Emissions",
+                "Route Visualizer",
+                "Supplier Lookup",
+                "Reports",
+                "Optimized Route Planning",
+                "Green Warehousing",
+                "Sustainable Packaging",
+                "Carbon Offsetting",
+                "Efficient Load Management",
+                "Energy Conservation"
+            ],
+            index=[
+                "Calculate Emissions",
+                "Route Visualizer",
+                "Supplier Lookup",
+                "Reports",
+                "Optimized Route Planning",
+                "Green Warehousing",
+                "Sustainable Packaging",
+                "Carbon Offsetting",
+                "Efficient Load Management",
+                "Energy Conservation"
+            ].index(st.session_state.page),
+        )
+        st.session_state.page = page
+
+    # Main content logo
+    st.markdown(
+        """
+        <div style='display: flex; align-items: center; padding: 10px;'>
+            <h1 style='margin: 0; font-size: 28px; color: #2E7D32;'>Carbon 360</h1>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Page content
-    page = st.session_state.page
-    
     if page == "Calculate Emissions":
         st.header("Calculate CO₂ Emissions")
         col1, col2 = st.columns(2)
@@ -898,9 +910,9 @@ def main():
                 st.metric("Car Miles Equivalent", f"{int(car_miles_equivalent)} miles")
             
             st.write("**Assumptions**:")
-            st.write("- Traditional warehouse: 100 kWh/m²/year")
-            st.write("- LED saves 50% energy, solar saves 30%")
-            st.write("- 0.5 kg CO₂ per kWh, $0.15/kWh, 0.4 kg CO₂/mile")
+            st.write("- Traditional warehouse: 100 kWh/m²/year (average for medium-sized warehouses).")
+            st.write("- LED saves 50% energy, solar saves 30%.")
+            st.write("- 0.5 kg CO₂ per kWh (grid average), $0.15/kWh, 0.4 kg CO₂/mile (passenger car).")
         
         st.subheader("Green Warehousing Dashboard")
         tab1, tab2 = st.tabs(["Savings Breakdown", "Trend Analysis"])
@@ -908,12 +920,12 @@ def main():
         with tab1:
             fig = go.Figure()
             fig.add_trace(go.Bar(
-                x=[co2_savings_kg * led_percentage / (led_percentage + solar_percentage), co2_savings_kg * solar_percentage / (led_percentage + solar_percentage)],
+                x=[co2_savings_kg * led_percentage / (led_percentage + solar_percentage or 1), co2_savings_kg * solar_percentage / (led_percentage + solar_percentage or 1)],
                 y=['LED Lighting', 'Solar Panels'],
                 name="CO₂ Savings (kg)"
             ))
             fig.add_trace(go.Bar(
-                x=[energy_savings_kwh * led_percentage / (led_percentage + solar_percentage), energy_savings_kwh * solar_percentage / (led_percentage + solar_percentage)],
+                x=[energy_savings_kwh * led_percentage / (led_percentage + solar_percentage or 1), energy_savings_kwh * solar_percentage / (led_percentage + solar_percentage or 1)],
                 y=['LED Lighting', 'Solar Panels'],
                 name="Energy Savings (kWh)"
             ))
@@ -1064,6 +1076,9 @@ def main():
             fuel_savings_usd = trips_saved * avg_trip_distance_km * 0.1 * 1.5  # 0.1 liter/km/ton, $1.5/liter
             flights_equivalent = co2_savings_kg / 1000  # 1000 kg CO₂ per flight
             
+            if trips_saved == 0:
+                st.warning("No trips saved. Try increasing the total weight or reducing the vehicle capacity for optimization.")
+            
             st.subheader("Key Performance Indicators (KPIs)")
             col3, col4, col5, col6 = st.columns(4)
             with col3:
@@ -1076,10 +1091,10 @@ def main():
                 st.metric("Flights Equivalent", f"{int(flights_equivalent)}")
             
             st.write("**Assumptions**:")
-            st.write("- Non-optimized: 90% vehicle capacity")
-            st.write("- Optimized: 98% vehicle capacity")
-            st.write("- Truck emissions: 0.096 kg CO₂/km/ton")
-            st.write("- Fuel: 0.1 liter/km/ton, $1.5/liter")
+            st.write("- Non-optimized: 90% vehicle capacity.")
+            st.write("- Optimized: 98% vehicle capacity.")
+            st.write("- Truck emissions: 0.096 kg CO₂/km/ton (diesel HGV).")
+            st.write("- Fuel: 0.1 liter/km/ton (average for heavy trucks), $1.5/liter (diesel price).")
         
         st.subheader("Load Management Dashboard")
         tab1, tab2 = st.tabs(["Savings Breakdown", "Weight Sensitivity"])
@@ -1113,6 +1128,9 @@ def main():
             cost_savings = energy_savings_kwh * 0.15  # $0.15/kWh
             households_equivalent = energy_savings_kwh / 10000  # 10,000 kWh/year per household
             
+            if smart_system_usage == 0:
+                st.warning("No smart systems selected. Increase Smart System Usage to calculate savings.")
+            
             st.subheader("Key Performance Indicators (KPIs)")
             col3, col4, col5, col6 = st.columns(4)
             with col3:
@@ -1125,9 +1143,9 @@ def main():
                 st.metric("Households Equivalent", f"{int(households_equivalent)}")
             
             st.write("**Assumptions**:")
-            st.write("- Facility: 120 kWh/m²/year")
-            st.write("- Smart systems save 40%")
-            st.write("- 0.5 kg CO₂/kWh, $0.15/kWh")
+            st.write("- Facility: 120 kWh/m²/year (average for industrial facilities).")
+            st.write("- Smart systems (e.g., IoT, automation) save 40% energy.")
+            st.write("- 0.5 kg CO₂/kWh (grid average), $0.15/kWh (commercial rate).")
         
         st.subheader("Energy Conservation Dashboard")
         tab1, tab2 = st.tabs(["Savings Breakdown", "Smart System Impact"])
