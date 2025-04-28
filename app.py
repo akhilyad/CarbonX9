@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 # Initialize SQLite database
 def init_db():
     """
-    Initialize the SQLite database with suppliers and emissions tables.
+    Initialize the SQLite database with suppliers, emissions, packaging, and offsets tables.
     Inserts sample supplier data if not already present.
     
     Raises:
@@ -23,40 +23,49 @@ def init_db():
             # Create suppliers table
             c.execute('''CREATE TABLE IF NOT EXISTS suppliers 
                         (id TEXT PRIMARY KEY, supplier_name TEXT, country TEXT, city TEXT, 
-                         material TEXT, green_score INTEGER, annual_capacity_tons INTEGER)''')
+                         material TEXT, green_score INTEGER, annual_capacity_tons INTEGER, 
+                         sustainable_practices TEXT)''')
             # Create emissions table
             c.execute('''CREATE TABLE IF NOT EXISTS emissions 
                         (id TEXT PRIMARY KEY, source TEXT, destination TEXT, 
                          transport_mode TEXT, distance_km REAL, co2_kg REAL, 
                          weight_tons REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
-            # Insert expanded supplier data
+            # Create packaging table
+            c.execute('''CREATE TABLE IF NOT EXISTS packaging 
+                        (id TEXT PRIMARY KEY, material_type TEXT, weight_kg REAL, 
+                         co2_kg REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+            # Create offsets table
+            c.execute('''CREATE TABLE IF NOT EXISTS offsets 
+                        (id TEXT PRIMARY KEY, project_type TEXT, co2_offset_tons REAL, 
+                         cost_usd REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+            # Insert expanded supplier data with sustainable practices
             sample_suppliers = [
                 # United Kingdom - London
-                (str(uuid.uuid4()), 'UK Steel Co', 'United Kingdom', 'London', 'Steel', 85, 50000),
-                (str(uuid.uuid4()), 'London Tech Supplies', 'United Kingdom', 'London', 'Electronics', 70, 20000),
-                (str(uuid.uuid4()), 'British Textiles Ltd', 'United Kingdom', 'London', 'Textiles', 65, 30000),
+                (str(uuid.uuid4()), 'UK Steel Co', 'United Kingdom', 'London', 'Steel', 85, 50000, 'Renewable energy'),
+                (str(uuid.uuid4()), 'London Tech Supplies', 'United Kingdom', 'London', 'Electronics', 70, 20000, 'Recycling'),
+                (str(uuid.uuid4()), 'British Textiles Ltd', 'United Kingdom', 'London', 'Textiles', 65, 30000, 'Sustainable sourcing'),
                 # France - Paris
-                (str(uuid.uuid4()), 'French Steelworks', 'France', 'Paris', 'Steel', 80, 45000),
-                (str(uuid.uuid4()), 'Paris Electronics Hub', 'France', 'Paris', 'Electronics', 75, 25000),
-                (str(uuid.uuid4()), 'ChemFrance', 'France', 'Paris', 'Chemicals', 60, 40000),
+                (str(uuid.uuid4()), 'French Steelworks', 'France', 'Paris', 'Steel', 80, 45000, 'Energy-efficient manufacturing'),
+                (str(uuid.uuid4()), 'Paris Electronics Hub', 'France', 'Paris', 'Electronics', 75, 25000, 'Carbon offsetting'),
+                (str(uuid.uuid4()), 'ChemFrance', 'France', 'Paris', 'Chemicals', 60, 40000, 'Waste reduction'),
                 # USA - New York
-                (str(uuid.uuid4()), 'American Steel Corp', 'USA', 'New York', 'Steel', 75, 60000),
-                (str(uuid.uuid4()), 'NY Tech Innovate', 'USA', 'New York', 'Electronics', 80, 30000),
-                (str(uuid.uuid4()), 'US Textile Giants', 'USA', 'New York', 'Textiles', 70, 35000),
+                (str(uuid.uuid4()), 'American Steel Corp', 'USA', 'New York', 'Steel', 75, 60000, 'Renewable energy'),
+                (str(uuid.uuid4()), 'NY Tech Innovate', 'USA', 'New York', 'Electronics', 80, 30000, 'Sustainable packaging'),
+                (str(uuid.uuid4()), 'US Textile Giants', 'USA', 'New York', 'Textiles', 70, 35000, 'Recycling'),
                 # China - Shanghai
-                (str(uuid.uuid4()), 'China Steel Group', 'China', 'Shanghai', 'Steel', 65, 80000),
-                (str(uuid.uuid4()), 'Shanghai Electronics', 'China', 'Shanghai', 'Electronics', 60, 50000),
-                (str(uuid.uuid4()), 'EastChem Co', 'China', 'Shanghai', 'Chemicals', 55, 60000),
+                (str(uuid.uuid4()), 'China Steel Group', 'China', 'Shanghai', 'Steel', 65, 80000, 'Energy-efficient manufacturing'),
+                (str(uuid.uuid4()), 'Shanghai Electronics', 'China', 'Shanghai', 'Electronics', 60, 50000, 'Carbon offsetting'),
+                (str(uuid.uuid4()), 'EastChem Co', 'China', 'Shanghai', 'Chemicals', 55, 60000, 'Waste reduction'),
                 # Japan - Tokyo
-                (str(uuid.uuid4()), 'Nippon Steel', 'Japan', 'Tokyo', 'Steel', 80, 55000),
-                (str(uuid.uuid4()), 'Tokyo Tech Solutions', 'Japan', 'Tokyo', 'Electronics', 85, 40000),
-                (str(uuid.uuid4()), 'Japan Textiles', 'Japan', 'Tokyo', 'Textiles', 70, 30000),
+                (str(uuid.uuid4()), 'Nippon Steel', 'Japan', 'Tokyo', 'Steel', 80, 55000, 'Renewable energy'),
+                (str(uuid.uuid4()), 'Tokyo Tech Solutions', 'Japan', 'Tokyo', 'Electronics', 85, 40000, 'Sustainable packaging'),
+                (str(uuid.uuid4()), 'Japan Textiles', 'Japan', 'Tokyo', 'Textiles', 70, 30000, 'Recycling'),
                 # Australia - Sydney
-                (str(uuid.uuid4()), 'Aussie Steelworks', 'Australia', 'Sydney', 'Steel', 75, 40000),
-                (str(uuid.uuid4()), 'Sydney Chem Supplies', 'Australia', 'Sydney', 'Chemicals', 65, 35000),
-                (str(uuid.uuid4()), 'Aus Textiles', 'Australia', 'Sydney', 'Textiles', 70, 25000)
+                (str(uuid.uuid4()), 'Aussie Steelworks', 'Australia', 'Sydney', 'Steel', 75, 40000, 'Sustainable sourcing'),
+                (str(uuid.uuid4()), 'Sydney Chem Supplies', 'Australia', 'Sydney', 'Chemicals', 65, 35000, 'Energy-efficient manufacturing'),
+                (str(uuid.uuid4()), 'Aus Textiles', 'Australia', 'Sydney', 'Textiles', 70, 25000, 'Carbon offsetting')
             ]
-            c.executemany('INSERT OR IGNORE INTO suppliers VALUES (?, ?, ?, ?, ?, ?, ?)', sample_suppliers)
+            c.executemany('INSERT OR IGNORE INTO suppliers VALUES (?, ?, ?, ?, ?, ?, ?, ?)', sample_suppliers)
             conn.commit()
     except sqlite3.Error as e:
         st.error(f"Database error: {e}")
@@ -64,32 +73,23 @@ def init_db():
 
 # DEFRA-based emission factors (kg CO₂ per km per ton)
 EMISSION_FACTORS = {
-    'Truck': 0.096,  # HGV, diesel
-    'Train': 0.028,  # Freight train
-    'Ship': 0.016,   # Container ship
-    'Plane': 0.602   # Cargo plane
+    'Truck': 0.096,       # HGV, diesel
+    'Train': 0.028,       # Freight train
+    'Ship': 0.016,        # Container ship
+    'Plane': 0.602,       # Cargo plane
+    'Electric Truck': 0.020,  # Electric vehicle, assuming grid emissions
+    'Biofuel Truck': 0.050,   # Biofuel-powered truck
+    'Hydrogen Truck': 0.010   # Hydrogen fuel cell truck
 }
 
 # Country-city structure with coordinates (latitude, longitude)
 LOCATIONS = {
-    'United Kingdom': {
-        'London': (51.5074, -0.1278),
-    },
-    'France': {
-        'Paris': (48.8566, 2.3522),
-    },
-    'USA': {
-        'New York': (40.7128, -74.0060),
-    },
-    'China': {
-        'Shanghai': (31.2304, 121.4737),
-    },
-    'Japan': {
-        'Tokyo': (35.6762, 139.6503),
-    },
-    'Australia': {
-        'Sydney': (-33.8688, 151.2093),
-    }
+    'United Kingdom': {'London': (51.5074, -0.1278)},
+    'France': {'Paris': (48.8566, 2.3522)},
+    'USA': {'New York': (40.7128, -74.0060)},
+    'China': {'Shanghai': (31.2304, 121.4737)},
+    'Japan': {'Tokyo': (35.6762, 139.6503)},
+    'Australia': {'Sydney': (-33.8688, 151.2093)}
 }
 
 # Carbon pricing data (as of April 2025, based on EU ETS)
@@ -101,35 +101,27 @@ EXCHANGE_RATES = {
     'SAR': 3.98   # Approximate
 }
 
+# Packaging emission factors (kg CO₂ per kg of material)
+PACKAGING_EMISSIONS = {
+    'Plastic': 6.0,      # Virgin plastic
+    'Cardboard': 0.9,    # Recycled cardboard
+    'Biodegradable': 0.3,  # Compostable materials
+    'Reusable': 0.1       # Reusable packaging
+}
+
+# Offset project costs (USD per ton of CO₂)
+OFFSET_COSTS = {
+    'Reforestation': 15.0,
+    'Renewable Energy': 20.0,
+    'Methane Capture': 18.0
+}
+
 def get_coordinates(country, city):
-    """
-    Get the coordinates (latitude, longitude) for a given country and city.
-    
-    Args:
-        country (str): The country name.
-        city (str): The city name.
-    
-    Returns:
-        tuple: (latitude, longitude) or (0, 0) if not found.
-    """
+    """Get coordinates for a given country and city."""
     return LOCATIONS.get(country, {}).get(city, (0, 0))
 
 def calculate_distance(country1, city1, country2, city2):
-    """
-    Calculate the great-circle distance between two cities using the Haversine formula.
-    
-    Args:
-        country1 (str): Source country.
-        city1 (str): Source city.
-        country2 (str): Destination country.
-        city2 (str): Destination city.
-    
-    Returns:
-        float: Distance in kilometers, rounded to 2 decimal places.
-    
-    Raises:
-        ValueError: If coordinates are not found for the given cities.
-    """
+    """Calculate great-circle distance using Haversine formula."""
     lat1, lon1 = get_coordinates(country1, city1)
     lat2, lon2 = get_coordinates(country2, city2)
     if lat1 == 0 and lon1 == 0 or lat2 == 0 and lon2 == 0:
@@ -142,48 +134,17 @@ def calculate_distance(country1, city1, country2, city2):
     return round(R * c, 2)
 
 def calculate_co2(country1, city1, country2, city2, transport_mode, distance_km, weight_tons):
-    """
-    Calculate CO₂ emissions for a shipment.
-    
-    Args:
-        country1 (str): Source country.
-        city1 (str): Source city.
-        country2 (str): Destination country.
-        city2 (str): Destination city.
-        transport_mode (str): Mode of transport (Truck, Train, Ship, Plane).
-        distance_km (float): Distance in kilometers.
-        weight_tons (float): Weight in tons.
-    
-    Returns:
-        float: CO₂ emissions in kilograms, rounded to 2 decimal places.
-    
-    Raises:
-        ValueError: If transport_mode is invalid.
-    """
+    """Calculate CO₂ emissions for a shipment."""
     emission_factor = EMISSION_FACTORS.get(transport_mode)
     if emission_factor is None:
         raise ValueError(f"Invalid transport mode: {transport_mode}")
     co2_kg = distance_km * weight_tons * emission_factor
     return round(co2_kg, 2)
 
-def optimize_route(country1, city1, country2, city2, distance_km, weight_tons):
+def optimize_route(country1, city1, country2, city2, distance_km, weight_tons, prioritize_green=False):
     """
-    Optimize transport route by combining modes to minimize CO₂ emissions.
-    
-    Args:
-        country1 (str): Source country.
-        city1 (str): Source city.
-        country2 (str): Destination country.
-        city2 (str): Destination city.
-        distance_km (float): Total distance in kilometers.
-        weight_tons (float): Weight in tons.
-    
-    Returns:
-        tuple: (best_option, min_co2, breakdown, distances)
-            - best_option: (mode1, ratio1, mode2, ratio2)
-            - min_co2: Total CO₂ emissions for the best option
-            - breakdown: CO₂ emissions for each mode
-            - distances: Distance for each mode
+    Optimize transport route to minimize CO₂ emissions, with optional green vehicle preference.
+    Returns: (best_option, min_co2, breakdown, distances)
     """
     intercontinental = country1 != country2
     distance_short = distance_km < 1000
@@ -191,35 +152,36 @@ def optimize_route(country1, city1, country2, city2, distance_km, weight_tons):
     distance_long = distance_km >= 5000
 
     combinations = []
+    green_modes = ['Electric Truck', 'Biofuel Truck', 'Hydrogen Truck', 'Train']
     if intercontinental:
         if distance_long:
             combinations.extend([
                 ('Ship', 0.9, 'Train', 0.1),
-                ('Ship', 0.8, 'Truck', 0.2),
+                ('Ship', 0.8, 'Electric Truck', 0.2) if prioritize_green else ('Ship', 0.8, 'Truck', 0.2),
                 ('Plane', 0.5, 'Ship', 0.5)
             ])
         elif distance_medium:
             combinations.extend([
                 ('Ship', 0.7, 'Train', 0.3),
-                ('Plane', 0.4, 'Truck', 0.6),
+                ('Plane', 0.4, 'Hydrogen Truck', 0.6) if prioritize_green else ('Plane', 0.4, 'Truck', 0.6),
                 ('Ship', 0.6, 'Plane', 0.4)
             ])
         else:
             combinations.extend([
-                ('Train', 0.8, 'Truck', 0.2),
+                ('Train', 0.8, 'Electric Truck', 0.2) if prioritize_green else ('Train', 0.8, 'Truck', 0.2),
                 ('Ship', 0.5, 'Truck', 0.5),
                 ('Plane', 0.3, 'Truck', 0.7)
             ])
     else:
         if distance_short:
             combinations.extend([
-                ('Train', 0.9, 'Truck', 0.1),
-                ('Truck', 1.0, None, 0.0),
+                ('Train', 0.9, 'Electric Truck', 0.1) if prioritize_green else ('Train', 0.9, 'Truck', 0.1),
+                ('Electric Truck', 1.0, None, 0.0) if prioritize_green else ('Truck', 1.0, None, 0.0),
                 ('Train', 1.0, None, 0.0)
             ])
         else:
             combinations.extend([
-                ('Train', 0.7, 'Truck', 0.3),
+                ('Train', 0.7, 'Biofuel Truck', 0.3) if prioritize_green else ('Train', 0.7, 'Truck', 0.3),
                 ('Truck', 0.6, 'Train', 0.4),
                 ('Plane', 0.3, 'Truck', 0.7)
             ])
@@ -244,20 +206,7 @@ def optimize_route(country1, city1, country2, city2, distance_km, weight_tons):
     return best_option, round(min_co2, 2), best_breakdown, best_distances
 
 def save_emission(source, destination, transport_mode, distance_km, co2_kg, weight_tons):
-    """
-    Save emission data to the SQLite database.
-    
-    Args:
-        source (str): Source location (city, country).
-        destination (str): Destination location (city, country).
-        transport_mode (str): Mode of transport.
-        distance_km (float): Distance in kilometers.
-        co2_kg (float): CO₂ emissions in kilograms.
-        weight_tons (float): Weight in tons.
-    
-    Raises:
-        sqlite3.Error: If a database error occurs.
-    """
+    """Save emission data to the SQLite database."""
     try:
         with sqlite3.connect('emissions.db') as conn:
             c = conn.cursor()
@@ -269,16 +218,34 @@ def save_emission(source, destination, transport_mode, distance_km, co2_kg, weig
         st.error(f"Database error: {e}")
         raise
 
+def save_packaging(material_type, weight_kg, co2_kg):
+    """Save packaging emission data to the SQLite database."""
+    try:
+        with sqlite3.connect('emissions.db') as conn:
+            c = conn.cursor()
+            packaging_id = str(uuid.uuid4())
+            c.execute('INSERT INTO packaging (id, material_type, weight_kg, co2_kg, timestamp) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+                      (packaging_id, material_type, weight_kg, co2_kg))
+            conn.commit()
+    except sqlite3.Error as e:
+        st.error(f"Database error: {e}")
+        raise
+
+def save_offset(project_type, co2_offset_tons, cost_usd):
+    """Save carbon offset data to the SQLite database."""
+    try:
+        with sqlite3.connect('emissions.db') as conn:
+            c = conn.cursor()
+            offset_id = str(uuid.uuid4())
+            c.execute('INSERT INTO offsets (id, project_type, co2_offset_tons, cost_usd, timestamp) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+                      (offset_id, project_type, co2_offset_tons, cost_usd))
+            conn.commit()
+    except sqlite3.Error as e:
+        st.error(f"Database error: {e}")
+        raise
+
 def get_emissions():
-    """
-    Retrieve all emission records from the database.
-    
-    Returns:
-        pd.DataFrame: DataFrame containing emission data.
-    
-    Raises:
-        sqlite3.Error: If a database error occurs.
-    """
+    """Retrieve all emission records from the database."""
     try:
         with sqlite3.connect('emissions.db') as conn:
             df = pd.read_sql_query('SELECT * FROM emissions', conn)
@@ -287,25 +254,32 @@ def get_emissions():
         st.error(f"Database error: {e}")
         raise
 
-def get_suppliers(country=None, city=None, material=None):
-    """
-    Retrieve suppliers from the database based on filters.
-    
-    Args:
-        country (str, optional): Filter by country.
-        city (str, optional): Filter by city.
-        material (str, optional): Filter by material (case-insensitive).
-    
-    Returns:
-        pd.DataFrame: DataFrame containing supplier data.
-    
-    Raises:
-        sqlite3.Error: If a database error occurs.
-    """
+def get_packaging():
+    """Retrieve all packaging emission records from the database."""
     try:
         with sqlite3.connect('emissions.db') as conn:
-            query = 'SELECT * FROM suppliers'
-            params = []
+            df = pd.read_sql_query('SELECT * FROM packaging', conn)
+        return df
+    except sqlite3.Error as e:
+        st.error(f"Database error: {e}")
+        raise
+
+def get_offsets():
+    """Retrieve all carbon offset records from the database."""
+    try:
+        with sqlite3.connect('emissions.db') as conn:
+            df = pd.read_sql_query('SELECT * FROM offsets', conn)
+        return df
+    except sqlite3.Error as e:
+        st.error(f"Database error: {e}")
+        raise
+
+def get_suppliers(country=None, city=None, material=None, min_green_score=0):
+    """Retrieve suppliers based on filters, prioritizing green suppliers."""
+    try:
+        with sqlite3.connect('emissions.db') as conn:
+            query = 'SELECT * FROM suppliers WHERE green_score >= ?'
+            params = [min_green_score]
             conditions = []
             if country and country != "All":
                 conditions.append('country = ?')
@@ -317,29 +291,47 @@ def get_suppliers(country=None, city=None, material=None):
                 conditions.append('LOWER(material) LIKE ?')
                 params.append(f'%{material.lower()}%')
             if conditions:
-                query += ' WHERE ' + ' AND '.join(conditions)
+                query += ' AND ' + ' AND '.join(conditions)
             df = pd.read_sql_query(query, conn, params=params)
         return df
     except sqlite3.Error as e:
         st.error(f"Database error: {e}")
         raise
 
+def calculate_warehouse_savings(warehouse_size_m2, led_percentage, solar_percentage):
+    """Calculate CO₂ savings from green warehousing technologies."""
+    # Assumptions: 100 kWh/m²/year for traditional warehouse, 50% savings with LED, 30% with solar
+    traditional_energy_kwh = warehouse_size_m2 * 100
+    led_savings_kwh = traditional_energy_kwh * led_percentage * 0.5
+    solar_savings_kwh = traditional_energy_kwh * solar_percentage * 0.3
+    total_savings_kwh = led_savings_kwh + solar_savings_kwh
+    co2_savings_kg = total_savings_kwh * 0.5  # 0.5 kg CO₂ per kWh
+    return round(co2_savings_kg, 2)
+
+def calculate_load_optimization(weight_tons, vehicle_capacity_tons):
+    """Calculate CO₂ savings from efficient load management."""
+    trips_without_optimization = math.ceil(weight_tons / vehicle_capacity_tons)
+    optimized_trips = math.ceil(weight_tons / (vehicle_capacity_tons * 0.95))  # Assume 95% capacity
+    trips_saved = trips_without_optimization - optimized_trips
+    co2_savings_kg = trips_saved * 100 * EMISSION_FACTORS['Truck']  # Assume 100 km per trip
+    return trips_saved, round(co2_savings_kg, 2)
+
 def main():
     st.set_page_config(page_title="CO₂ Emission Calculator", layout="wide")
     init_db()
 
-    # Initialize session state for page navigation and sourcing data
+    # Initialize session state
     if 'page' not in st.session_state:
         st.session_state.page = "Calculate Emissions"
     if 'source_country' not in st.session_state or st.session_state.source_country not in LOCATIONS:
-        st.session_state.source_country = next(iter(LOCATIONS))  # Default to first country
+        st.session_state.source_country = next(iter(LOCATIONS))
     if 'dest_country' not in st.session_state or st.session_state.dest_country not in LOCATIONS:
-        st.session_state.dest_country = next(iter(LOCATIONS))  # Default to first country
+        st.session_state.dest_country = next(iter(LOCATIONS))
     if 'weight_tons' not in st.session_state:
         st.session_state.weight_tons = 1.0
 
-    # Header with company name and navigation
-    col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
+    # Navigation bar with new feature buttons
+    col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11 = st.columns([2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
     
     with col1:
         st.markdown(
@@ -367,9 +359,33 @@ def main():
         if st.button("Reports", key="nav_reports"):
             st.session_state.page = "Reports"
     
+    with col6:
+        if st.button("Optimized Routes", key="nav_optimized"):
+            st.session_state.page = "Optimized Route Planning"
+    
+    with col7:
+        if st.button("Green Warehousing", key="nav_warehouse"):
+            st.session_state.page = "Green Warehousing"
+    
+    with col8:
+        if st.button("Sustainable Packaging", key="nav_packaging"):
+            st.session_state.page = "Sustainable Packaging"
+    
+    with col9:
+        if st.button("Carbon Offsetting", key="nav_offset"):
+            st.session_state.page = "Carbon Offsetting"
+    
+    with col10:
+        if st.button("Load Management", key="nav_load"):
+            st.session_state.page = "Efficient Load Management"
+    
+    with col11:
+        if st.button("Energy Conservation", key="nav_energy"):
+            st.session_state.page = "Energy Conservation"
+    
     st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
 
-    # Page content based on selection
+    # Page content
     page = st.session_state.page
     
     if page == "Calculate Emissions":
@@ -409,7 +425,6 @@ def main():
                 st.success(f"Estimated CO₂ Emissions: {co2_kg} kg")
                 save_emission(source, destination, transport_mode, distance_km, co2_kg, weight_tons)
                 
-                # Store source and destination for Supplier Lookup
                 st.session_state.source_country = source_country
                 st.session_state.dest_country = dest_country
                 st.session_state.weight_tons = weight_tons
@@ -425,16 +440,11 @@ def main():
                 
                 with st.expander("How were these values calculated?"):
                     st.write("**Distance Calculation**")
-                    st.write("The distance between two cities is calculated using the **Haversine Formula**, which computes the great-circle distance between two points on a sphere (Earth).")
-                    st.write("Formula: `a = sin²(Δlat/2) + cos(lat1) * cos(lat2) * sin²(Δlon/2)`")
-                    st.write("`c = 2 * atan2(√a, √(1-a))`")
-                    st.write("`distance = R * c` (where R = 6371 km, Earth's radius)")
-                    st.write(f"Coordinates used: {source_city} ({get_coordinates(source_country, source_city)}), {dest_city} ({get_coordinates(dest_country, dest_city)})")
+                    st.write("The distance between two cities is calculated using the **Haversine Formula**.")
+                    st.write(f"Coordinates: {source_city} ({get_coordinates(source_country, source_city)}), {dest_city} ({get_coordinates(dest_country, dest_city)})")
                     
                     st.write("**CO₂ Emission Calculation**")
-                    st.write("CO₂ emissions are calculated using DEFRA emission factors for each transport mode.")
-                    st.write("Formula: `CO₂ (kg) = Distance (km) * Weight (tons) * Emission Factor (kg CO₂/km/ton)`")
-                    st.write(f"Emission Factor for {transport_mode}: {EMISSION_FACTORS[transport_mode]} kg CO₂/km/ton")
+                    st.write("CO₂ = Distance (km) * Weight (tons) * Emission Factor")
                     st.write(f"Calculation: {distance_km} km * {weight_tons} tons * {EMISSION_FACTORS[transport_mode]} = {co2_kg} kg")
             except ValueError as e:
                 st.error(str(e))
@@ -503,9 +513,7 @@ def main():
                     folium_static(m, width=1200, height=600)
                 
                 st.subheader("Route Analytics Dashboard")
-                routes = []
-                for idx, row in emissions.iterrows():
-                    routes.append(f"Route {idx + 1}: {row['source']} to {row['destination']}")
+                routes = [f"Route {idx + 1}: {row['source']} to {row['destination']}" for idx, row in emissions.iterrows()]
                 
                 selected_route = st.selectbox("Select Route to Analyze", routes)
                 route_idx = int(selected_route.split(":")[0].split(" ")[1]) - 1
@@ -521,7 +529,7 @@ def main():
                 current_mode = row['transport_mode']
                 
                 try:
-                    best_option, min_co2, breakdown, distances = optimize_route(source_country, source_city, dest_country, dest_city, distance_km, weight_tons)
+                    best_option, min_co2, breakdown, distances = optimize_route(source_country, source_city, dest_country, dest_city, distance_km, weight_tons, prioritize_green=True)
                     mode1, ratio1, mode2, ratio2 = best_option
                     co2_1, co2_2 = breakdown
                     dist1, dist2 = distances
@@ -580,23 +588,23 @@ def main():
     elif page == "Supplier Lookup":
         st.header("Supplier Lookup Dashboard")
         
-        # Filters
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             country = st.selectbox("Country", ["All"] + list(LOCATIONS.keys()))
         with col2:
             cities = ["All"] + list(LOCATIONS.get(country, {}).keys()) if country != "All" else ["All"]
             city = st.selectbox("City", cities)
         with col3:
-            material = st.text_input("Material (e.g., Steel, Electronics, Textiles, Chemicals)")
+            material = st.text_input("Material (e.g., Steel, Electronics)")
+        with col4:
+            min_green_score = st.slider("Minimum Green Score", 0, 100, 50)
         
         try:
             suppliers = get_suppliers(country if country != "All" else None, 
                                     city if city != "All" else None, 
-                                    material or None)
+                                    material or None, min_green_score)
             
             if not suppliers.empty:
-                # KPIs
                 st.subheader("Key Performance Indicators (KPIs)")
                 col4, col5, col6, col7 = st.columns(4)
                 with col4:
@@ -606,7 +614,6 @@ def main():
                 with col6:
                     st.metric("Total Capacity", f"{suppliers['annual_capacity_tons'].sum():,} tons")
                 
-                # Local Sourcing Suggestion
                 potential_savings = 0
                 if st.session_state.source_country and st.session_state.dest_country:
                     source_country = st.session_state.source_country
@@ -615,40 +622,35 @@ def main():
                     try:
                         distance_km = calculate_distance(source_country, list(LOCATIONS[source_country].keys())[0],
                                                        dest_country, list(LOCATIONS[dest_country].keys())[0])
-                        # Assume Truck for default transport to calculate potential savings
                         current_co2 = distance_km * weight_tons * EMISSION_FACTORS['Truck']
                         local_suppliers = suppliers[suppliers['country'] == dest_country]
                         if not local_suppliers.empty:
-                            potential_savings = current_co2  # If sourced locally, shipping emissions are 0
+                            potential_savings = current_co2
                             st.success(
-                                f"🌍 **Local Sourcing Opportunity**: Consider sourcing from {dest_country} to eliminate shipping emissions. "
-                                f"There are {len(local_suppliers)} suppliers in {dest_country} that can meet your needs, potentially saving {potential_savings:.2f} kg CO₂."
+                                f"🌍 **Local Sourcing Opportunity**: Source from {dest_country} to save {potential_savings:.2f} kg CO₂."
                             )
                         else:
-                            st.info(f"No suppliers found in {dest_country}. Consider a dual sourcing strategy by combining local and regional suppliers.")
+                            st.info(f"No suppliers found in {dest_country}.")
                     except ValueError as e:
-                        st.error(f"Error calculating local sourcing savings: {e}")
+                        st.error(f"Error calculating savings: {e}")
                 with col7:
                     st.metric("Potential CO₂ Savings", f"{potential_savings:.2f} kg")
                 
-                # Interactive Charts
                 st.subheader("Supplier Insights 📊")
                 tab1, tab2, tab3 = st.tabs(["Supplier Distribution", "Material Availability", "Supplier Details"])
                 
                 with tab1:
                     fig = px.bar(suppliers.groupby('country').size().reset_index(name='Count'),
-                                x='country', y='Count', title="Suppliers by Country",
-                                labels={'country': 'Country', 'Count': 'Number of Suppliers'})
+                                x='country', y='Count', title="Suppliers by Country")
                     st.plotly_chart(fig, use_container_width=True)
                 
                 with tab2:
                     fig = px.bar(suppliers.groupby('material')['annual_capacity_tons'].sum().reset_index(),
-                                x='material', y='annual_capacity_tons', title="Material Capacity by Type",
-                                labels={'material': 'Material', 'annual_capacity_tons': 'Capacity (tons)'})
+                                x='material', y='annual_capacity_tons', title="Material Capacity")
                     st.plotly_chart(fig, use_container_width=True)
                 
                 with tab3:
-                    st.dataframe(suppliers[['supplier_name', 'country', 'city', 'material', 'green_score', 'annual_capacity_tons']])
+                    st.dataframe(suppliers[['supplier_name', 'country', 'city', 'material', 'green_score', 'sustainable_practices']])
             else:
                 st.info("No suppliers found for the given criteria.")
         except Exception as e:
@@ -670,14 +672,14 @@ def main():
                     source_country = row['source'].split(', ')[1]
                     source_city = row['source'].split(', ')[0]
                     dest_country = row['destination'].split(', ')[1]
-                    dest_city = row['destination'].split(', ')[0]  # Extract destination city
+                    dest_city = row['destination'].split(', ')[0]
                     distance_km = row['distance_km']
                     weight_tons = row['weight_tons']
                     current_co2 = row['co2_kg']
                     current_mode = row['transport_mode']
                     
                     try:
-                        best_option, min_co2, breakdown, distances = optimize_route(source_country, source_city, dest_country, dest_city, distance_km, weight_tons)
+                        best_option, min_co2, breakdown, distances = optimize_route(source_country, source_city, dest_country, dest_city, distance_km, weight_tons, prioritize_green=True)
                         mode1, ratio1, mode2, ratio2 = best_option
                         co2_1, co2_2 = breakdown
                         dist1, dist2 = distances
@@ -712,72 +714,206 @@ def main():
                     with col4:
                         st.metric("Total CO₂ Savings", f"{total_savings:.2f} kg")
                     
-                    st.subheader("Emission Breakdown by Transport Mode 📉")
+                    st.subheader("Emission Breakdown by Transport Mode")
                     mode_summary = emissions.groupby('transport_mode')['co2_kg'].sum().reset_index()
-                    fig = px.pie(mode_summary, values='co2_kg', names='transport_mode', 
-                                 title="CO₂ Emissions by Transport Mode")
+                    fig = px.pie(mode_summary, values='co2_kg', names='transport_mode', title="CO₂ by Mode")
                     st.plotly_chart(fig, use_container_width=True)
                 
                 with tab2:
-                    st.subheader("CO₂ Impact Insights 🌍")
+                    st.subheader("CO₂ Impact Insights")
                     smartphone_charges = total_co2 * 1000 / 0.008
                     ev_distance = total_co2 / 0.2
-                    st.write(f"**Energy Equivalent** ⚡: The {total_co2:.2f} kg of CO₂ emitted could have been used to:")
-                    st.write(f"- Charge 📱 {int(smartphone_charges):,} smartphones (assuming 8 g CO₂ per charge).")
-                    st.write(f"- Power an electric vehicle 🚗 for {ev_distance:.0f} km (assuming 0.2 kg CO₂/km).")
-                    st.write(f"**Environmental Fact** 🌳: 1 kg of CO₂ is equivalent to the carbon sequestered by 0.05 trees annually.")
-                    st.write(f"Your emissions could have been offset by planting {int(total_co2 * 0.05):,} trees! 🌲")
+                    st.write(f"**Energy Equivalent**: The {total_co2:.2f} kg of CO₂ could:")
+                    st.write(f"- Charge {int(smartphone_charges):,} smartphones.")
+                    st.write(f"- Power an EV for {ev_distance:.0f} km.")
+                    st.write(f"**Environmental Fact**: Offset by planting {int(total_co2 * 0.05):,} trees!")
                 
                 with tab3:
-                    st.subheader("Route Optimization Summary 📊")
-                    
-                    currency = st.selectbox("Select Currency for Cost Savings", ['EUR', 'USD', 'AUD', 'SAR'])
+                    st.subheader("Route Optimization Summary")
+                    currency = st.selectbox("Currency", ['EUR', 'USD', 'AUD', 'SAR'])
                     carbon_price_per_kg = (CARBON_PRICE_EUR_PER_TON / 1000) * EXCHANGE_RATES[currency]
                     total_cost_savings = total_savings * carbon_price_per_kg
                     
-                    st.write(f"**Carbon Price (April 2025)**: {CARBON_PRICE_EUR_PER_TON:.2f} EUR/tCO₂ (EU ETS)")
-                    st.write(f"**Converted Price**: {carbon_price_per_kg:.4f} {currency}/kg CO₂")
-                    st.write(f"**Total Cost Savings**: {total_cost_savings:.2f} {currency} (based on {total_savings:.2f} kg CO₂ saved)")
+                    st.write(f"**Carbon Price**: {CARBON_PRICE_EUR_PER_TON:.2f} EUR/tCO₂")
+                    st.write(f"**Converted**: {carbon_price_per_kg:.4f} {currency}/kg CO₂")
+                    st.write(f"**Total Savings**: {total_cost_savings:.2f} {currency}")
                     
                     df_routes = pd.DataFrame(route_data)
                     fig = go.Figure()
-                    fig.add_trace(go.Bar(
-                        x=df_routes['Old CO₂'],
-                        y=df_routes['Route'],
-                        orientation='h',
-                        name='Old Route CO₂ (kg)',
-                        marker_color='#FF4B4B'
-                    ))
-                    fig.add_trace(go.Bar(
-                        x=df_routes['New CO₂'],
-                        y=df_routes['Route'],
-                        orientation='h',
-                        name='New Route CO₂ (kg)',
-                        marker_color='#36A2EB'
-                    ))
-                    fig.update_layout(
-                        title="Old vs New Route CO₂ Emissions",
-                        barmode='group'
-                    )
+                    fig.add_trace(go.Bar(x=df_routes['Old CO₂'], y=df_routes['Route'], orientation='h', name='Old CO₂', marker_color='#FF4B4B'))
+                    fig.add_trace(go.Bar(x=df_routes['New CO₂'], y=df_routes['Route'], orientation='h', name='New CO₂', marker_color='#36A2EB'))
+                    fig.update_layout(title="Old vs New Route CO₂", barmode='group')
                     st.plotly_chart(fig, use_container_width=True)
-                    
                     st.dataframe(df_routes[['Route', 'Old Mode', 'Old Distance', 'Old CO₂', 'New Modes', 'New Distances', 'New CO₂', 'Savings']])
                 
                 with tab4:
-                    st.subheader("Detailed Data 📋")
+                    st.subheader("Detailed Data")
                     st.dataframe(emissions)
-                    
                     csv = emissions.to_csv(index=False)
-                    st.download_button(
-                        label="Download as CSV",
-                        data=csv,
-                        file_name="emissions_report.csv",
-                        mime="text/csv"
-                    )
+                    st.download_button(label="Download as CSV", data=csv, file_name="emissions_report.csv", mime="text/csv")
             else:
-                st.info("No emission data available. Calculate some emissions first!")
+                st.info("No emission data available.")
         except Exception as e:
             st.error(f"Error loading emissions: {e}")
+    
+    elif page == "Optimized Route Planning":
+        st.header("Optimized Route Planning")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Route Details")
+            source_country = st.selectbox("Source Country", list(LOCATIONS.keys()), key="opt_source_country")
+            source_city = st.selectbox("Source City", list(LOCATIONS[source_country].keys()), key="opt_source_city")
+            dest_country = st.selectbox("Destination Country", list(LOCATIONS.keys()), key="opt_dest_country")
+            dest_city = st.selectbox("Destination City", list(LOCATIONS[dest_country].keys()), key="opt_dest_city")
+        
+        with col2:
+            weight_tons = st.number_input("Weight (tons)", min_value=0.1, max_value=100000.0, value=1.0, step=0.1)
+            prioritize_green = st.checkbox("Prioritize Green Vehicles", value=True)
+            try:
+                distance_km = calculate_distance(source_country, source_city, dest_country, dest_city)
+                st.write(f"Estimated Distance: {distance_km} km")
+            except ValueError as e:
+                st.error(str(e))
+                distance_km = 0.0
+        
+        if st.button("Optimize Route") and distance_km > 0:
+            try:
+                best_option, min_co2, breakdown, distances = optimize_route(source_country, source_city, dest_country, dest_city, distance_km, weight_tons, prioritize_green)
+                mode1, ratio1, mode2, ratio2 = best_option
+                co2_1, co2_2 = breakdown
+                dist1, dist2 = distances
+                
+                st.success(f"Optimized CO₂ Emissions: {min_co2:.2f} kg")
+                st.subheader("Route Breakdown")
+                if mode2:
+                    st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
+                    st.write(f"- **{mode2}**: {dist2:.2f} km, CO₂: {co2_2:.2f} kg")
+                else:
+                    st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
+                
+                fig = go.Figure()
+                fig.add_bar(x=[co2_1, co2_2] if mode2 else [co2_1], y=[mode1, mode2] if mode2 else [mode1], name="CO₂ Emissions")
+                fig.update_layout(title="CO₂ Emissions by Transport Mode")
+                st.plotly_chart(fig, use_container_width=True)
+            except ValueError as e:
+                st.error(f"Error optimizing route: {e}")
+    
+    elif page == "Green Warehousing":
+        st.header("Green Warehousing")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            warehouse_size_m2 = st.number_input("Warehouse Size (m²)", min_value=100, max_value=100000, value=1000)
+            led_percentage = st.slider("LED Lighting Usage (%)", 0, 100, 50) / 100
+            solar_percentage = st.slider("Solar Panel Usage (%)", 0, 100, 30) / 100
+        
+        with col2:
+            co2_savings_kg = calculate_warehouse_savings(warehouse_size_m2, led_percentage, solar_percentage)
+            st.metric("CO₂ Savings", f"{co2_savings_kg:.2f} kg/year")
+            st.write("**Assumptions**:")
+            st.write("- Traditional warehouse: 100 kWh/m²/year")
+            st.write("- LED saves 50% energy, solar saves 30%")
+            st.write("- 0.5 kg CO₂ per kWh")
+        
+        fig = go.Figure()
+        fig.add_bar(x=[co2_savings_kg * led_percentage / (led_percentage + solar_percentage), co2_savings_kg * solar_percentage / (led_percentage + solar_percentage)],
+                    y=['LED Lighting', 'Solar Panels'], name="CO₂ Savings")
+        fig.update_layout(title="CO₂ Savings by Technology")
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif page == "Sustainable Packaging":
+        st.header("Sustainable Packaging")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            material_type = st.selectbox("Packaging Material", list(PACKAGING_EMISSIONS.keys()))
+            weight_kg = st.number_input("Packaging Weight (kg)", min_value=0.1, max_value=10000.0, value=1.0)
+        
+        with col2:
+            co2_kg = weight_kg * PACKAGING_EMISSIONS[material_type]
+            st.metric("CO₂ Emissions", f"{co2_kg:.2f} kg")
+            if material_type != 'Biodegradable' and material_type != 'Reusable':
+                st.info(f"Switch to Biodegradable or Reusable to save {co2_kg - weight_kg * PACKAGING_EMISSIONS['Biodegradable']:.2f} kg CO₂.")
+            
+            if st.button("Save Packaging Data"):
+                save_packaging(material_type, weight_kg, co2_kg)
+                st.success("Packaging data saved!")
+        
+        try:
+            packaging = get_packaging()
+            if not packaging.empty:
+                fig = px.bar(packaging.groupby('material_type')['co2_kg'].sum().reset_index(),
+                            x='material_type', y='co2_kg', title="CO₂ Emissions by Packaging Type")
+                st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.error(f"Error loading packaging data: {e}")
+    
+    elif page == "Carbon Offsetting":
+        st.header("Carbon Offsetting Programs")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            project_type = st.selectbox("Offset Project", list(OFFSET_COSTS.keys()))
+            co2_offset_tons = st.number_input("CO₂ to Offset (tons)", min_value=0.1, max_value=10000.0, value=1.0)
+        
+        with col2:
+            cost_usd = co2_offset_tons * OFFSET_COSTS[project_type]
+            st.metric("Offset Cost", f"${cost_usd:.2f} USD")
+            st.write(f"**Project**: {project_type}")
+            st.write(f"Offsetting {co2_offset_tons} tons CO₂")
+            
+            if st.button("Save Offset"):
+                save_offset(project_type, co2_offset_tons, cost_usd)
+                st.success("Offset data saved!")
+        
+        try:
+            offsets = get_offsets()
+            if not offsets.empty:
+                fig = px.bar(offsets.groupby('project_type')['co2_offset_tons'].sum().reset_index(),
+                            x='project_type', y='co2_offset_tons', title="CO₂ Offset by Project")
+                st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.error(f"Error loading offset data: {e}")
+    
+    elif page == "Efficient Load Management":
+        st.header("Efficient Load Management")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            weight_tons = st.number_input("Total Weight (tons)", min_value=0.1, max_value=100000.0, value=10.0)
+            vehicle_capacity_tons = st.number_input("Vehicle Capacity (tons)", min_value=1.0, max_value=100.0, value=20.0)
+        
+        with col2:
+            trips_saved, co2_savings_kg = calculate_load_optimization(weight_tons, vehicle_capacity_tons)
+            st.metric("Trips Saved", f"{trips_saved}")
+            st.metric("CO₂ Savings", f"{co2_savings_kg:.2f} kg")
+            st.write("**Assumption**: 100 km per trip, Truck emissions")
+        
+        fig = go.Figure()
+        fig.add_bar(x=[co2_savings_kg], y=['Optimized Load'], name="CO₂ Savings")
+        fig.update_layout(title="CO₂ Savings from Load Optimization")
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif page == "Energy Conservation":
+        st.header("Energy Conservation in Facilities")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            facility_size_m2 = st.number_input("Facility Size (m²)", min_value=100, max_value=100000, value=1000)
+            smart_system_usage = st.slider("Smart System Usage (%)", 0, 100, 50) / 100
+        
+        with col2:
+            # Assumption: 120 kWh/m²/year, 40% savings with smart systems
+            energy_savings_kwh = facility_size_m2 * 120 * smart_system_usage * 0.4
+            co2_savings_kg = energy_savings_kwh * 0.5  # 0.5 kg CO₂ per kWh
+            st.metric("CO₂ Savings", f"{co2_savings_kg:.2f} kg/year")
+            st.write("**Assumption**: 120 kWh/m²/year, 40% savings")
+        
+        fig = go.Figure()
+        fig.add_bar(x=[co2_savings_kg], y=['Smart Systems'], name="CO₂ Savings")
+        fig.update_layout(title="CO₂ Savings from Energy Conservation")
+        st.plotly_chart(fig, use_container_width=True)
 
 if __name__ == "__main__":
     main()
