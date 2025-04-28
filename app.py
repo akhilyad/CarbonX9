@@ -1309,4 +1309,4 @@ def main():
         tab1, tab2 = st.tabs(["Savings Breakdown", "Smart System Impact"])
         
         with tab1:
-            if co2_savings_kg > 0 or energy_savings_kwh > 0
+            if co2_savings_kg > 0 or energy_savings_kwh > 0;
