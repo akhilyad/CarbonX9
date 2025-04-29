@@ -375,19 +375,17 @@ def main():
         st.session_state.dest_city = next(iter(LOCATIONS[st.session_state.dest_country]))
     if 'weight_tons' not in st.session_state:
         st.session_state.weight_tons = 1.0
-    # Initialize session state for inputs to force KPI updates
-    if 'opt_inputs' not in st.session_state:
-        st.session_state.opt_inputs = {}
+    # Initialize session state for feature inputs
     if 'warehouse_inputs' not in st.session_state:
-        st.session_state.warehouse_inputs = {}
+        st.session_state.warehouse_inputs = {'warehouse_size_m2': 1000, 'led_percentage': 0.5, 'solar_percentage': 0.3}
     if 'packaging_inputs' not in st.session_state:
-        st.session_state.packaging_inputs = {}
+        st.session_state.packaging_inputs = {'material_type': 'Plastic', 'weight_kg': 1.0}
     if 'offset_inputs' not in st.session_state:
-        st.session_state.offset_inputs = {}
+        st.session_state.offset_inputs = {'project_type': 'Reforestation', 'co2_offset_tons': 1.0}
     if 'load_inputs' not in st.session_state:
-        st.session_state.load_inputs = {}
+        st.session_state.load_inputs = {'weight_tons': 10.0, 'vehicle_capacity_tons': 20.0, 'avg_trip_distance_km': 100.0}
     if 'energy_inputs' not in st.session_state:
-        st.session_state.energy_inputs = {}
+        st.session_state.energy_inputs = {'facility_size_m2': 1000, 'smart_system_usage': 0.5}
 
     # Sidebar navigation
     with st.sidebar:
@@ -644,7 +642,7 @@ def main():
                             title="Current vs Optimized Route Comparison",
                             barmode='group'
                         )
-                        st.plotly_chart(fig, use_container_width=True, key=f"route_comparison_{time.time()}")
+                        st.plotly_chart(fig, use_container_width=True, key=f"route_comparison_{time.time()}_{selected_route}")
                 except ValueError as e:
                     st.error(f"Error optimizing route: {e}")
             else:
@@ -709,12 +707,12 @@ def main():
                 with tab1:
                     fig = px.bar(suppliers.groupby('country').size().reset_index(name='Count'),
                                 x='country', y='Count', title="Suppliers by Country")
-                    st.plotly_chart(fig, use_container_width=True, key=f"supplier_distribution_{time.time()}")
+                    st.plotly_chart(fig, use_container_width=True, key=f"supplier_distribution_{time.time()}_{country}_{city}_{material}_{min_green_score}")
                 
                 with tab2:
                     fig = px.bar(suppliers.groupby('material')['annual_capacity_tons'].sum().reset_index(),
                                 x='material', y='annual_capacity_tons', title="Material Capacity")
-                    st.plotly_chart(fig, use_container_width=True, key=f"material_availability_{time.time()}")
+                    st.plotly_chart(fig, use_container_width=True, key=f"material_availability_{time.time()}_{country}_{city}_{material}_{min_green_score}")
                 
                 with tab3:
                     st.dataframe(suppliers[['supplier_name', 'country', 'city', 'material', 'green_score', 'sustainable_practices']])
@@ -810,7 +808,8 @@ def main():
                     fig.add_trace(go.Bar(x=df_routes['Old CO₂'], y=df_routes['Route'], orientation='h', name='Current CO₂', marker_color='#FF4B4B'))
                     fig.add_trace(go.Bar(x=df_routes['New CO₂'], y=df_routes['Route'], orientation='h', name='Optimized CO₂', marker_color='#36A2EB'))
                     fig.update_layout(title="Current vs Optimized Route CO₂", barmode='group')
-                    st.plotly_chart(fig, use_container_width=True, key=f"route_optimization_{time.time()}")
+                    st.plotly_chart(fig, use_container_width=True, key=f"route_optimization_{time.time()}_{currency}")
+                
                     st.dataframe(df_routes[['Route', 'Old Mode', 'Old Distance', 'Old CO₂', 'New Modes', 'New Distances', 'New CO₂', 'Savings']])
                 
                 with tab4:
@@ -869,17 +868,6 @@ def main():
             except ValueError as e:
                 st.error(str(e))
                 distance_km = 0.0
-        
-        # Update session state for inputs
-        st.session_state.opt_inputs = {
-            "source_country": source_country,
-            "source_city": source_city,
-            "dest_country": dest_country,
-            "dest_city": dest_city,
-            "weight_tons": weight_tons,
-            "prioritize_green": prioritize_green,
-            "distance_km": distance_km
-        }
         
         if st.button("Optimize Route") and distance_km > 0:
             try:
@@ -963,7 +951,7 @@ def main():
                         marker_color=['#FF9999', '#66B3FF']
                     ))
                     fig.update_layout(title="Current vs Optimized Route", barmode='group')
-                    st.plotly_chart(fig, use_container_width=True, key=f"opt_co2_comparison_{time.time()}")
+                    st.plotly_chart(fig, use_container_width=True, key=f"opt_co2_comparison_{time.time()}_{source_city}_{dest_city}_{weight_tons}_{prioritize_green}")
                 
                 with tab3:
                     labels = [mode1]
@@ -978,7 +966,7 @@ def main():
                             values=values,
                             title="CO₂ Contribution by Mode"
                         ))
-                        st.plotly_chart(fig, use_container_width=True, key=f"opt_mode_contribution_{time.time()}")
+                        st.plotly_chart(fig, use_container_width=True, key=f"opt_mode_contribution_{time.time()}_{source_city}_{dest_city}_{weight_tons}_{prioritize_green}")
                     else:
                         st.info("No CO₂ contributions to display.")
                 
@@ -989,7 +977,7 @@ def main():
                         title={'text': "Route Efficiency (%)"},
                         gauge={'axis': {'range': [0, 100]}, 'bar': {'color': "#36A2EB"}}
                     ))
-                    st.plotly_chart(fig, use_container_width=True, key=f"opt_efficiency_gauge_{time.time()}")
+                    st.plotly_chart(fig, use_container_width=True, key=f"opt_efficiency_gauge_{time.time()}_{source_city}_{dest_city}_{weight_tons}_{prioritize_green}")
             except ValueError as e:
                 st.error(f"Error optimizing route: {e}")
     
@@ -998,9 +986,9 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            warehouse_size_m2 = st.number_input("Warehouse Size (m²)", min_value=100, max_value=100000, value=1000)
-            led_percentage = st.slider("LED Lighting Usage (%)", 0, 100, 50) / 100
-            solar_percentage = st.slider("Solar Panel Usage (%)", 0, 100, 30) / 100
+            warehouse_size_m2 = st.number_input("Warehouse Size (m²)", min_value=100, max_value=100000, value=st.session_state.warehouse_inputs['warehouse_size_m2'])
+            led_percentage = st.slider("LED Lighting Usage (%)", 0, 100, int(st.session_state.warehouse_inputs['led_percentage'] * 100)) / 100
+            solar_percentage = st.slider("Solar Panel Usage (%)", 0, 100, int(st.session_state.warehouse_inputs['solar_percentage'] * 100)) / 100
         
         # Update session state for inputs
         st.session_state.warehouse_inputs = {
@@ -1050,7 +1038,7 @@ def main():
                     name="Energy Savings (kWh)"
                 ))
                 fig.update_layout(title="Savings by Technology", barmode='stack')
-                st.plotly_chart(fig, use_container_width=True, key=f"warehouse_savings_breakdown_{time.time()}")
+                st.plotly_chart(fig, use_container_width=True, key=f"warehouse_savings_breakdown_{time.time()}_{warehouse_size_m2}_{led_percentage}_{solar_percentage}")
             else:
                 st.info("No savings to display. Adjust LED or solar usage.")
         
@@ -1060,15 +1048,15 @@ def main():
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=sizes, y=co2_trend, mode='lines+markers', name='CO₂ Savings (kg)'))
             fig.update_layout(title="CO₂ Savings vs Warehouse Size", xaxis_title="Size (m²)", yaxis_title="CO₂ Savings (kg)")
-            st.plotly_chart(fig, use_container_width=True, key=f"warehouse_trend_analysis_{time.time()}")
+            st.plotly_chart(fig, use_container_width=True, key=f"warehouse_trend_analysis_{time.time()}_{warehouse_size_m2}_{led_percentage}_{solar_percentage}")
     
     elif page == "Sustainable Packaging":
         st.header("Sustainable Packaging")
         col1, col2 = st.columns(2)
         
         with col1:
-            material_type = st.selectbox("Packaging Material", list(PACKAGING_EMISSIONS.keys()))
-            weight_kg = st.number_input("Packaging Weight (kg)", min_value=0.1, max_value=10000.0, value=1.0)
+            material_type = st.selectbox("Packaging Material", list(PACKAGING_EMISSIONS.keys()), index=list(PACKAGING_EMISSIONS.keys()).index(st.session_state.packaging_inputs['material_type']))
+            weight_kg = st.number_input("Packaging Weight (kg)", min_value=0.1, max_value=10000.0, value=st.session_state.packaging_inputs['weight_kg'])
         
         # Update session state for inputs
         st.session_state.packaging_inputs = {
@@ -1109,7 +1097,7 @@ def main():
             fig = go.Figure()
             fig.add_trace(go.Bar(x=materials, y=emissions, name="CO₂ Emissions (kg)"))
             fig.update_layout(title="CO₂ Emissions by Material")
-            st.plotly_chart(fig, use_container_width=True, key=f"packaging_material_comparison_{time.time()}")
+            st.plotly_chart(fig, use_container_width=True, key=f"packaging_material_comparison_{time.time()}_{material_type}_{weight_kg}")
         
         with tab2:
             try:
@@ -1120,7 +1108,7 @@ def main():
                     trend_data = packaging.groupby(packaging['timestamp'].dt.date)['co2_kg'].sum().reset_index()
                     if not trend_data.empty:
                         fig = px.line(trend_data, x='timestamp', y='co2_kg', title="Packaging Emissions Over Time")
-                        st.plotly_chart(fig, use_container_width=True, key=f"packaging_historical_trends_{time.time()}")
+                        st.plotly_chart(fig, use_container_width=True, key=f"packaging_historical_trends_{time.time()}_{material_type}_{weight_kg}")
                     else:
                         st.info("No valid packaging data available for trends.")
                 else:
@@ -1133,8 +1121,8 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            project_type = st.selectbox("Offset Project", list(OFFSET_COSTS.keys()))
-            co2_offset_tons = st.number_input("CO₂ to Offset (tons)", min_value=0.1, max_value=10000.0, value=1.0)
+            project_type = st.selectbox("Offset Project", list(OFFSET_COSTS.keys()), index=list(OFFSET_COSTS.keys()).index(st.session_state.offset_inputs['project_type']))
+            co2_offset_tons = st.number_input("CO₂ to Offset (tons)", min_value=0.1, max_value=10000.0, value=st.session_state.offset_inputs['co2_offset_tons'])
         
         # Update session state for inputs
         st.session_state.offset_inputs = {
@@ -1174,7 +1162,7 @@ def main():
                 if not offsets.empty:
                     project_summary = offsets.groupby('project_type')['co2_offset_tons'].sum().reset_index()
                     fig = px.pie(project_summary, values='co2_offset_tons', names='project_type', title="CO₂ Offset by Project")
-                    st.plotly_chart(fig, use_container_width=True, key=f"offset_project_distribution_{time.time()}")
+                    st.plotly_chart(fig, use_container_width=True, key=f"offset_project_distribution_{time.time()}_{project_type}_{co2_offset_tons}")
                 else:
                     st.info("No offset data available. Save some offset data first!")
             except Exception as e:
@@ -1198,7 +1186,7 @@ def main():
                         marker_color='#FF9999'
                     ))
                     fig.update_layout(title="Cost vs CO₂ Offset", barmode='group')
-                    st.plotly_chart(fig, use_container_width=True, key=f"offset_cost_vs_offset_{time.time()}")
+                    st.plotly_chart(fig, use_container_width=True, key=f"offset_cost_vs_offset_{time.time()}_{project_type}_{co2_offset_tons}")
                 else:
                     st.info("No offset data available. Save some offset data first!")
             except Exception as e:
@@ -1209,9 +1197,9 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            weight_tons = st.number_input("Total Weight (tons)", min_value=0.1, max_value=100000.0, value=10.0)
-            vehicle_capacity_tons = st.number_input("Vehicle Capacity (tons)", min_value=1.0, max_value=100.0, value=20.0)
-            avg_trip_distance_km = st.number_input("Average Trip Distance (km)", min_value=1.0, max_value=10000.0, value=100.0)
+            weight_tons = st.number_input("Total Weight (tons)", min_value=0.1, max_value=100000.0, value=st.session_state.load_inputs['weight_tons'])
+            vehicle_capacity_tons = st.number_input("Vehicle Capacity (tons)", min_value=1.0, max_value=100.0, value=st.session_state.load_inputs['vehicle_capacity_tons'])
+            avg_trip_distance_km = st.number_input("Average Trip Distance (km)", min_value=1.0, max_value=10000.0, value=st.session_state.load_inputs['avg_trip_distance_km'])
         
         # Update session state for inputs
         st.session_state.load_inputs = {
@@ -1254,7 +1242,7 @@ def main():
                 fig.add_trace(go.Bar(x=[trips_saved], y=['Trips Saved'], name="Trips"))
                 fig.add_trace(go.Bar(x=[co2_savings_kg], y=['CO₂ Savings (kg)'], name="CO₂"))
                 fig.update_layout(title="Load Optimization Savings", barmode='group')
-                st.plotly_chart(fig, use_container_width=True, key=f"load_savings_breakdown_{time.time()}")
+                st.plotly_chart(fig, use_container_width=True, key=f"load_savings_breakdown_{time.time()}_{weight_tons}_{vehicle_capacity_tons}_{avg_trip_distance_km}")
             else:
                 st.info("No savings to display. Adjust inputs to enable optimization.")
         
@@ -1264,15 +1252,15 @@ def main():
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=weights, y=savings, mode='lines+markers', name='CO₂ Savings (kg)'))
             fig.update_layout(title="CO₂ Savings vs Total Weight", xaxis_title="Weight (tons)", yaxis_title="CO₂ Savings (kg)")
-            st.plotly_chart(fig, use_container_width=True, key=f"load_weight_sensitivity_{time.time()}")
+            st.plotly_chart(fig, use_container_width=True, key=f"load_weight_sensitivity_{time.time()}_{weight_tons}_{vehicle_capacity_tons}_{avg_trip_distance_km}")
     
     elif page == "Energy Conservation":
         st.header("Energy Conservation in Facilities")
         col1, col2 = st.columns(2)
         
         with col1:
-            facility_size_m2 = st.number_input("Facility Size (m²)", min_value=100, max_value=100000, value=1000)
-            smart_system_usage = st.slider("Smart System Usage (%)", 0, 100, 50) / 100
+            facility_size_m2 = st.number_input("Facility Size (m²)", min_value=100, max_value=100000, value=st.session_state.energy_inputs['facility_size_m2'])
+            smart_system_usage = st.slider("Smart System Usage (%)", 0, 100, int(st.session_state.energy_inputs['smart_system_usage'] * 100)) / 100
         
         # Update session state for inputs
         st.session_state.energy_inputs = {
@@ -1322,7 +1310,7 @@ def main():
                     name="Energy Savings (kWh)"
                 ))
                 fig.update_layout(title="Savings from Smart Systems", barmode='group')
-                st.plotly_chart(fig, use_container_width=True, key=f"energy_savings_breakdown_{time.time()}")
+                st.plotly_chart(fig, use_container_width=True, key=f"energy_savings_breakdown_{time.time()}_{facility_size_m2}_{smart_system_usage}")
             else:
                 st.info("No savings to display. Increase Smart System Usage.")
         
@@ -1332,7 +1320,7 @@ def main():
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=[u * 100 for u in usage_levels], y=co2_trend, mode='lines+markers', name='CO₂ Savings (kg)'))
             fig.update_layout(title="CO₂ Savings vs Smart System Usage", xaxis_title="Usage (%)", yaxis_title="CO₂ Savings (kg)")
-            st.plotly_chart(fig, use_container_width=True, key=f"energy_smart_system_impact_{time.time()}")
+            st.plotly_chart(fig, use_container_width=True, key=f"energy_smart_system_impact_{time.time()}_{facility_size_m2}_{smart_system_usage}")
 
 if __name__ == "__main__":
     main()
