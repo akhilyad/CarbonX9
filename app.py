@@ -776,7 +776,7 @@ def main():
                 distance_km = 0.0
         
         st.markdown('<div class="mt-6">', unsafe_allow_html=True)
-        if st.button("Calculate", key Spirit=True, key="calc_button", type="primary"):
+        if st.button("Calculate", key="calc_button", type="primary"):
             if distance_km > 0:
                 source = f"{source_city}, {source_country}"
                 destination = f"{dest_city}, {dest_country}"
