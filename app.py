@@ -1133,58 +1133,79 @@ def main():
 
             st.markdown('</div>', unsafe_allow_html=True)
 
-        elif st.session_state.page == "Sustainable Packaging":
-            st.markdown('<h2 class="text-3xl font-bold mb-6 text-gray-800">Sustainable Packaging</h2>', unsafe_allow_html=True)
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            col1, col2 = st.columns(2)
+       elif st.session_state.page == "Sustainable Packaging":
+    st.markdown('<h2 class="text-3xl font-bold mb-6 text-gray-800">Sustainable Packaging</h2>', unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
 
-            with col1:
-                material_type = st.selectbox("Packaging Material", list(PACKAGING_EMISSIONS.keys()), index=list(PACKAGING_EMISSIONS.keys()).index(st.session_state.packaging_inputs['material_type']), key="pkg_material")
-                weight_kg = st.number_input("Packaging Weight (kg)", min_value=0.1, max_value=10000.0, value=st.session_state.packaging_inputs['weight_kg'], key="pkg_weight")
+    with col1:
+        material_type = st.selectbox("Packaging Material", list(PACKAGING_EMISSIONS.keys()), index=list(PACKAGING_EMISSIONS.keys()).index(st.session_state.packaging_inputs['material_type']), key="pkg_material")
+        weight_kg = st.number_input("Packaging Weight (kg)", min_value=0.1, max_value=10000.0, value=st.session_state.packaging_inputs['weight_kg'], key="pkg_weight")
 
-                st.session_state.packaging_inputs = {
-                    "material_type": material_type,
-                    "weight_kg": weight_kg
-                }
+        st.session_state.packaging_inputs = {
+            "material_type": material_type,
+            "weight_kg": weight_kg
+        }
 
-            with col2:
-                co2_kg = weight_kg * PACKAGING_EMISSIONS[material_type]
-                potential_savings = co2_kg - weight_kg * PACKAGING_EMISSIONS['Biodegradable'] if material_type not in ['Biodegradable', 'Reusable'] else 0
-                cost_impact = weight_kg * (PACKAGING_COSTS[material_type] - PACKAGING_COSTS['Biodegradable'])
-                plastic_bottles = co2_kg / 0.12 if material_type == 'Plastic' else 0
+    with col2:
+        co2_kg = weight_kg * PACKAGING_EMISSIONS[material_type]
+        potential_savings = co2_kg - weight_kg * PACKAGING_EMISSIONS['Biodegradable'] if material_type not in ['Biodegradable', 'Reusable'] else 0
+        cost_impact = weight_kg * (PACKAGING_COSTS[material_type] - PACKAGING_COSTS['Biodegradable'])
+        plastic_bottles = co2_kg / 0.12 if material_type == 'Plastic' else 0
 
-                st.markdown('<h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators (KPIs)</h3>', unsafe_allow_html=True)
-                col3, col4, col5, col6 = st.columns(4)
-                with col3:
-                    st.markdown(f'<div class="metric-card"><p>CO₂ Emissions</p><p class="font-semibold">{co2_kg:.2f} kg</p></div>', unsafe_allow_html=True)
-                with col4:
-                    st.markdown(f'<div class="metric-card"><p>Potential Savings</p><p class="font-semibold">{potential_savings:.2f} kg</p></div>', unsafe_allow_html=True)
-                with col5:
-                    st.markdown(f'<div class="metric-card"><p>Cost Impact</p><p class="font-semibold">${cost_impact:.2f}</p></div>', unsafe_allow_html=True)
-                with col6:
-                    st.markdown(f'<div class="metric-card"><p>Plastic Bottles</p><p class="font-semibold">{int(plastic_bottles)}</p></div>', unsafe_allow_html=True)
+        st.markdown('<h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators (KPIs)</h3>', unsafe_allow_html=True)
+        col3, col4, col5, col6 = st.columns(4)
+        with col3:
+            st.markdown(f'<div class="metric-card"><p>CO₂ Emissions</p><p class="font-semibold">{co2_kg:.2f} kg</p></div>', unsafe_allow_html=True)
+        with col4:
+            st.markdown(f'<div class="metric-card"><p>Potential Savings</p><p class="font-semibold">{potential_savings:.2f} kg</p></div>', unsafe_allow_html=True)
+        with col5:
+            st.markdown(f'<div class="metric-card"><p>Cost Impact</p><p class="font-semibold">${cost_impact:.2f}</p></div>', unsafe_allow_html=True)
+        with col6:
+            st.markdown(f'<div class="metric-card"><p>Plastic Bottles</p><p class="font-semibold">{int(plastic_bottles)}</p></div>', unsafe_allow_html=True)
 
-                if material_type not in ['Biodegradable', 'Reusable']:
-                    st.markdown(f'<div class="bg-blue-100 p-4 rounded-lg"><p class="text-lg font-semibold text-blue-800">Switch to Biodegradable to save {potential_savings:.2f} kg CO₂.</p></div>', unsafe_allow_html=True)
+        if material_type not in ['Biodegradable', 'Reusable']:
+            st.markdown(f'<div class="bg-blue-100 p-4 rounded-lg"><p class="text-lg font-semibold text-blue-800">Switch to Biodegradable to save {potential_savings:.2f} kg CO₂.</p></div>', unsafe_allow_html=True)
 
-                if st.button("Save Packaging Data", key="save_pkg_button", type="primary"):
-                    save_packaging(material_type, weight_kg, co2_kg)
-                    st.markdown(f'<div class="bg-green-100 p-4 rounded-lg"><p class="text-lg font-semibold text-green-800">Packaging data saved!</p></div>', unsafe_allow_html=True)
+        if st.button("Save Packaging Data", key="save_pkg_button", type="primary"):
+            save_packaging(material_type, weight_kg, co2_kg)
+            st.markdown(f'<div class="bg-green-100 p-4 rounded-lg"><p class="text-lg font-semibold text-green-800">Packaging data saved!</p></div>', unsafe_allow_html=True)
 
-            st.markdown('<h3 class="text-xl font-semibold mb-4 text-gray-700">Sustainable Packaging Dashboard</h3>', unsafe_allow_html=True)
-            tab1, tab2 = st.tabs(["Material Comparison", "Historical Trends"])
+    st.markdown('<h3 class="text-xl font-semibold mb-4 text-gray-700">Sustainable Packaging Dashboard</h3>', unsafe_allow_html=True)
+    tab1, tab2 = st.tabs(["Material Comparison", "Historical Trends"])
 
-            with tab1:
-                materials = list(PACKAGING_EMISSIONS.keys())
-                emissions = [weight_kg * PACKAGING_EMISSIONS[m] for m in materials]
+    with tab1:
+        materials = list(PACKAGING_EMISSIONS.keys())
+        emissions = [weight_kg * PACKAGING_EMISSIONS[m] for m in materials]
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=materials, y=emissions, name="CO₂ Emissions (kg)"))
+        fig.update_layout(title="CO₂ Emissions by Material")
+        st.plotly_chart(fig, use_container_width=True, key=f"packaging_material_comparison_{time.time()}_{material_type}_{weight_kg}")
+
+    with tab2:
+        try:
+            packaging = get_packaging()
+            if not packaging.empty:
+                packaging['timestamp'] = pd.to_datetime(packaging['timestamp'], errors='coerce')
+                packaging['year_month'] = packaging['timestamp'].dt.to_period('M').astype(str)
+                trend_data = packaging.groupby(['year_month', 'material_type'])['co2_kg'].sum().unstack().fillna(0)
                 fig = go.Figure()
-                fig.add_trace(go.Bar(x=materials, y=emissions, name="CO₂ Emissions (kg)"))
-                fig.update_layout(title="CO₂ Emissions by Material")
-                st.plotly_chart(fig, use_container_width=True, key=f"packaging_material_comparison_{time.time()}_{material_type}_{weight_kg}")
+                for material in trend_data.columns:
+                    fig.add_trace(go.Scatter(
+                        x=trend_data.index,
+                        y=trend_data[material],
+                        mode='lines+markers',
+                        name=material
+                    ))
+                fig.update_layout(
+                    title="CO₂ Emissions by Packaging Material Over Time",
+                    xaxis_title="Month",
+                    yaxis_title="CO₂ Emissions (kg)"
+                )
+                st.plotly_chart(fig, use_container_width=True, key=f"packaging_trend_{time.time()}_{material_type}_{weight_kg}")
+            else:
+                st.info("No packaging data available for historical trends.")
+        except Exception as e:
+            st.error(f"Error loading packaging trends: {e}")
 
-            with tab2:
-                try:
-                    packaging = get_packaging()
-                    if not packaging.empty:
-                        packaging['timestamp'] = pd.to_datetime(packaging['timestamp'], errors='coerce')
-                       
+st.markdown('</div>', unsafe_allow_html=True)
