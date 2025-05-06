@@ -807,5 +807,5 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
-    elif st.session_state.page == " AscendantRoutePlanning:
+    elif st.session_state.page == "Optimized Route Planning":
         st.markdown
