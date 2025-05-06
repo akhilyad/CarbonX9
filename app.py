@@ -311,6 +311,12 @@ def calculate_load_optimization(weight_tons, vehicle_capacity_tons, avg_trip_dis
     co2_savings_kg = trips_saved * avg_trip_distance_km * EMISSION_FACTORS['Truck']
     return trips_saved, round(co2_savings_kg, 2)
 
+def calculate_energy_savings(facility_size_m2, smart_system_usage):
+    base_energy_kwh = facility_size_m2 * 120  # kWh/m²/year
+    smart_savings_kwh = base_energy_kwh * smart_system_usage * 0.4
+    co2_savings_kg = smart_savings_kwh * 0.5
+    return round(co2_savings_kg, 2), round(smart_savings_kwh, 2)
+
 def main():
     st.set_page_config(page_title="Carbon 360", layout="wide", initial_sidebar_state="expanded")
 
@@ -564,9 +570,9 @@ def main():
                     legend_html = '''
                     <div style="position: fixed; bottom: 50px; left: 50px; z-index: 1000; padding: 10px; background-color: white; border: 2px solid black; border-radius: 5px;">
                         <p><strong>CO₂ Emission Legend</strong></p>
-                        <p><span style="color: green;">■</span> Low (&lt;500 kg)</p>
+                        <p><span style="color: green;">■</span> Low (<500 kg)</p>
                         <p><span style="color: orange;">■</span> Medium (500-1000 kg)</p>
-                        <p><span style="color: red;">■</span> High (&gt;1000 kg)</p>
+                        <p><span style="color: red;">■</span> High (>1000 kg)</p>
                     </div>
                     '''
                     m.get_root().html.add_child(folium.Element(legend_html))
@@ -892,12 +898,10 @@ def main():
 
                                 # Intermediate point for multi-mode routes
                                 if mode2:
-                                    # Simple interpolation for intermediate point (e.g., port for Ship-to-Train)
                                     inter_lat = source_coords[0] + (dest_coords[0] - source_coords[0]) * ratio1
                                     inter_lon = source_coords[1] + (dest_coords[1] - source_coords[1]) * ratio1
                                     inter_coords = (inter_lat, inter_lon)
 
-                                    # Segment 1: Source to Intermediate
                                     folium.PolyLine(
                                         locations=[source_coords, inter_coords],
                                         color=TRANSPORT_COLORS[mode1],
@@ -915,7 +919,6 @@ def main():
                                         icon=folium.Icon(color='gray')
                                     ).add_to(m)
 
-                                    # Segment 2: Intermediate to Destination
                                     folium.PolyLine(
                                         locations=[inter_coords, dest_coords],
                                         color=TRANSPORT_COLORS[mode2],
@@ -928,7 +931,6 @@ def main():
                                         icon=folium.Icon(color=TRANSPORT_COLORS[mode2])
                                     ).add_to(m)
                                 else:
-                                    # Single mode route
                                     folium.PolyLine(
                                         locations=[source_coords, dest_coords],
                                         color=TRANSPORT_COLORS[mode1],
@@ -946,7 +948,6 @@ def main():
                                         icon=folium.Icon(color=TRANSPORT_COLORS[mode1])
                                     ).add_to(m)
 
-                                # Legend
                                 legend_html = '''
                                 <div style="position: fixed; bottom: 50px; left: 50px; z-index: 1000; padding: 10px; background-color: white; border: 2px solid black; border-radius: 5px;">
                                     <p><strong>Transport Mode Legend</strong></p>
@@ -959,9 +960,9 @@ def main():
                                     <p><span style="color: pink;">■</span> Hydrogen Truck</p>
                                     <p><span style="color: gray;">■</span> Transfer Point</p>
                                     <p><strong>CO₂ Emission</strong></p>
-                                    <p>Low: &lt;500 kg</p>
+                                    <p>Low: <500 kg</p>
                                     <p>Medium: 500-1000 kg</p>
-                                    <p>High: &gt;1000 kg</p>
+                                    <p>High: >1000 kg</p>
                                 </div>
                                 '''
                                 m.get_root().html.add_child(folium.Element(legend_html))
@@ -1133,79 +1134,100 @@ def main():
 
             st.markdown('</div>', unsafe_allow_html=True)
 
-    elif st.session_state.page == "Sustainable Packaging":
-    st.markdown('<h2 class="text-3xl font-bold mb-6 text-gray-800">Sustainable Packaging</h2>', unsafe_allow_html=True)
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
+        elif st.session_state.page == "Sustainable Packaging":
+            st.markdown('<h2 class="text-3xl font-bold mb-6 text-gray-800">Sustainable Packaging</h2>', unsafe_allow_html=True)
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            col1, col2 = st.columns(2)
 
-    with col1:
-        material_type = st.selectbox("Packaging Material", list(PACKAGING_EMISSIONS.keys()), index=list(PACKAGING_EMISSIONS.keys()).index(st.session_state.packaging_inputs['material_type']), key="pkg_material")
-        weight_kg = st.number_input("Packaging Weight (kg)", min_value=0.1, max_value=10000.0, value=st.session_state.packaging_inputs['weight_kg'], key="pkg_weight")
+            with col1:
+                material_type = st.selectbox("Packaging Material", list(PACKAGING_EMISSIONS.keys()), index=list(PACKAGING_EMISSIONS.keys()).index(st.session_state.packaging_inputs['material_type']), key="pkg_material")
+                weight_kg = st.number_input("Packaging Weight (kg)", min_value=0.1, max_value=10000.0, value=st.session_state.packaging_inputs['weight_kg'], key="pkg_weight")
 
-        st.session_state.packaging_inputs = {
-            "material_type": material_type,
-            "weight_kg": weight_kg
-        }
+                st.session_state.packaging_inputs = {
+                    "material_type": material_type,
+                    "weight_kg": weight_kg
+                }
 
-    with col2:
-        co2_kg = weight_kg * PACKAGING_EMISSIONS[material_type]
-        potential_savings = co2_kg - weight_kg * PACKAGING_EMISSIONS['Biodegradable'] if material_type not in ['Biodegradable', 'Reusable'] else 0
-        cost_impact = weight_kg * (PACKAGING_COSTS[material_type] - PACKAGING_COSTS['Biodegradable'])
-        plastic_bottles = co2_kg / 0.12 if material_type == 'Plastic' else 0
+            with col2:
+                co2_kg = weight_kg * PACKAGING_EMISSIONS[material_type]
+                potential_savings = co2_kg - weight_kg * PACKAGING_EMISSIONS['Biodegradable'] if material_type not in ['Biodegradable', 'Reusable'] else 0
+                cost_impact = weight_kg * (PACKAGING_COSTS[material_type] - PACKAGING_COSTS['Biodegradable'])
+                plastic_bottles = co2_kg / 0.12 if material_type == 'Plastic' else 0
 
-        st.markdown('<h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators (KPIs)</h3>', unsafe_allow_html=True)
-        col3, col4, col5, col6 = st.columns(4)
-        with col3:
-            st.markdown(f'<div class="metric-card"><p>CO₂ Emissions</p><p class="font-semibold">{co2_kg:.2f} kg</p></div>', unsafe_allow_html=True)
-        with col4:
-            st.markdown(f'<div class="metric-card"><p>Potential Savings</p><p class="font-semibold">{potential_savings:.2f} kg</p></div>', unsafe_allow_html=True)
-        with col5:
-            st.markdown(f'<div class="metric-card"><p>Cost Impact</p><p class="font-semibold">${cost_impact:.2f}</p></div>', unsafe_allow_html=True)
-        with col6:
-            st.markdown(f'<div class="metric-card"><p>Plastic Bottles</p><p class="font-semibold">{int(plastic_bottles)}</p></div>', unsafe_allow_html=True)
+                st.markdown('<h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators (KPIs)</h3>', unsafe_allow_html=True)
+                col3, col4, col5, col6 = st.columns(4)
+                with col3:
+                    st.markdown(f'<div class="metric-card"><p>CO₂ Emissions</p><p class="font-semibold">{co2_kg:.2f} kg</p></div>', unsafe_allow_html=True)
+                with col4:
+                    st.markdown(f'<div class="metric-card"><p>Potential Savings</p><p class="font-semibold">{potential_savings:.2f} kg</p></div>', unsafe_allow_html=True)
+                with col5:
+                    st.markdown(f'<div class="metric-card"><p>Cost Impact</p><p class="font-semibold">${cost_impact:.2f}</p></div>', unsafe_allow_html=True)
+                with col6:
+                    st.markdown(f'<div class="metric-card"><p>Plastic Bottles</p><p class="font-semibold">{int(plastic_bottles)}</p></div>', unsafe_allow_html=True)
 
-        if material_type not in ['Biodegradable', 'Reusable']:
-            st.markdown(f'<div class="bg-blue-100 p-4 rounded-lg"><p class="text-lg font-semibold text-blue-800">Switch to Biodegradable to save {potential_savings:.2f} kg CO₂.</p></div>', unsafe_allow_html=True)
+                if material_type not in ['Biodegradable', 'Reusable']:
+                    st.markdown(f'<div class="bg-blue-100 p-4 rounded-lg"><p class="text-lg font-semibold text-blue-800">Switch to Biodegradable to save {potential_savings:.2f} kg CO₂.</p></div>', unsafe_allow_html=True)
 
-        if st.button("Save Packaging Data", key="save_pkg_button", type="primary"):
-            save_packaging(material_type, weight_kg, co2_kg)
-            st.markdown(f'<div class="bg-green-100 p-4 rounded-lg"><p class="text-lg font-semibold text-green-800">Packaging data saved!</p></div>', unsafe_allow_html=True)
+                if st.button("Save Packaging Data", key="save_pkg_button", type="primary"):
+                    save_packaging(material_type, weight_kg, co2_kg)
+                    st.markdown(f'<div class="bg-green-100 p-4 rounded-lg"><p class="text-lg font-semibold text-green-800">Packaging data saved!</p></div>', unsafe_allow_html=True)
 
-    st.markdown('<h3 class="text-xl font-semibold mb-4 text-gray-700">Sustainable Packaging Dashboard</h3>', unsafe_allow_html=True)
-    tab1, tab2 = st.tabs(["Material Comparison", "Historical Trends"])
+            st.markdown('<h3 class="text-xl font-semibold mb-4 text-gray-700">Sustainable Packaging Dashboard</h3>', unsafe_allow_html=True)
+            tab1, tab2 = st.tabs(["Material Comparison", "Historical Trends"])
 
-    with tab1:
-        materials = list(PACKAGING_EMISSIONS.keys())
-        emissions = [weight_kg * PACKAGING_EMISSIONS[m] for m in materials]
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=materials, y=emissions, name="CO₂ Emissions (kg)"))
-        fig.update_layout(title="CO₂ Emissions by Material")
-        st.plotly_chart(fig, use_container_width=True, key=f"packaging_material_comparison_{time.time()}_{material_type}_{weight_kg}")
-
-    with tab2:
-        try:
-            packaging = get_packaging()
-            if not packaging.empty:
-                packaging['timestamp'] = pd.to_datetime(packaging['timestamp'], errors='coerce')
-                packaging['year_month'] = packaging['timestamp'].dt.to_period('M').astype(str)
-                trend_data = packaging.groupby(['year_month', 'material_type'])['co2_kg'].sum().unstack().fillna(0)
+            with tab1:
+                materials = list(PACKAGING_EMISSIONS.keys())
+                emissions = [weight_kg * PACKAGING_EMISSIONS[m] for m in materials]
                 fig = go.Figure()
-                for material in trend_data.columns:
-                    fig.add_trace(go.Scatter(
-                        x=trend_data.index,
-                        y=trend_data[material],
-                        mode='lines+markers',
-                        name=material
-                    ))
-                fig.update_layout(
-                    title="CO₂ Emissions by Packaging Material Over Time",
-                    xaxis_title="Month",
-                    yaxis_title="CO₂ Emissions (kg)"
-                )
-                st.plotly_chart(fig, use_container_width=True, key=f"packaging_trend_{time.time()}_{material_type}_{weight_kg}")
-            else:
-                st.info("No packaging data available for historical trends.")
-        except Exception as e:
-            st.error(f"Error loading packaging trends: {e}")
+                fig.add_trace(go.Bar(x=materials, y=emissions, name="CO₂ Emissions (kg)"))
+                fig.update_layout(title="CO₂ Emissions by Material")
+                st.plotly_chart(fig, use_container_width=True, key=f"packaging_material_comparison_{time.time()}_{material_type}_{weight_kg}")
 
-st.markdown('</div>', unsafe_allow_html=True)
+            with tab2:
+                try:
+                    packaging = get_packaging()
+                    if not packaging.empty:
+                        packaging['timestamp'] = pd.to_datetime(packaging['timestamp'], errors='coerce')
+                        packaging['year_month'] = packaging['timestamp'].dt.to_period('M').astype(str)
+                        trend_data = packaging.groupby(['year_month', 'material_type'])['co2_kg'].sum().unstack().fillna(0)
+                        fig = go.Figure()
+                        for material in trend_data.columns:
+                            fig.add_trace(go.Scatter(
+                                x=trend_data.index,
+                                y=trend_data[material],
+                                mode='lines+markers',
+                                name=material
+                            ))
+                        fig.update_layout(
+                            title="CO₂ Emissions by Packaging Material Over Time",
+                            xaxis_title="Month",
+                            yaxis_title="CO₂ Emissions (kg)"
+                        )
+                        st.plotly_chart(fig, use_container_width=True, key=f"packaging_trend_{time.time()}_{material_type}_{weight_kg}")
+                    else:
+                        st.info("No packaging data available for historical trends.")
+                except Exception as e:
+                    st.error(f"Error loading packaging trends: {e}")
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        elif st.session_state.page == "Carbon Offsetting":
+            st.markdown('<h2 class="text-3xl font-bold mb-6 text-gray-800">Carbon Offsetting</h2>', unsafe_allow_html=True)
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            col1, col2 = st.columns(2)
+
+            with col1:
+                project_type = st.selectbox("Offset Project Type", list(OFFSET_COSTS.keys()), index=list(OFFSET_COSTS.keys()).index(st.session_state.offset_inputs['project_type']), key="offset_project")
+                co2_offset_tons = st.number_input("CO₂ to Offset (tons)", min_value=0.1, max_value=10000.0, value=st.session_state.offset_inputs['co2_offset_tons'], step=0.1, key="offset_co2")
+
+                st.session_state.offset_inputs = {
+                    "project_type": project_type,
+                    "co2_offset_tons": co2_offset_tons
+                }
+
+            with col2:
+                cost_usd = co2_offset_tons * OFFSET_COSTS[project_type]
+                trees_planted = int(co2_offset_tons * 20)  # Approx. 20 trees per ton
+                emissions_equivalent = co2_offset_tons * 1000 / 0.4  # Car miles equivalent
+
+                st.markdown
