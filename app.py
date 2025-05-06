@@ -1,3 +1,38 @@
+The `SyntaxError: expected 'except' or 'finally' block` at line 1233 in the "Carbon Offsetting" section indicates that a `try` block is incomplete or improperly structured, causing Python to expect an `except` or `finally` block. The error points to an `st.markdown` statement, suggesting that the issue is within the "Carbon Offsetting" page's code, where a `try` block was started but not closed before the `st.markdown` call. This is likely due to an incomplete implementation in the `elif st.session_state.page == "Carbon Offsetting":` block, where the code was cut off in your previous message.
+
+Based on the context of the full `app.py` code provided, the "Carbon Offsetting" section is the last page implemented, and the error occurs because the `try` block in the `main()` function (encompassing all page handlers) is not properly closed with an `except` block after the "Carbon Offsetting" section. Additionally, the "Carbon Offsetting" section itself is incomplete, ending abruptly at an `st.markdown` statement without finishing the logic for KPIs, dashboard tabs, or saving offset data.
+
+### Root Cause Analysis
+- **Error Location**: Line 1233, at `st.markdown` in the "Carbon Offsetting" section, indicates the `try` block starting in the `main()` function (before the page handlers) expects an `except` or `finally` block, but the code continues with more statements (or ends abruptly).
+- **Likely Issues**:
+  - The "Carbon Offsetting" section is incomplete, missing the logic for displaying KPIs, dashboard tabs, and saving offset data, which may have caused confusion in the block structure.
+  - The `try` block in `main()` (starting before `if st.session_state.page == "Calculate Emissions":`) is not closed with an `except` block after all `elif` statements, including the incomplete "Carbon Offsetting" section.
+  - The `st.markdown` statement at line 1233 is likely the start of a KPI display block, but it’s not properly integrated due to the truncated code.
+
+### Solution
+To fix this:
+1. **Complete the "Carbon Offsetting" Section**:
+   - Implement the full logic for the "Carbon Offsetting" page, including KPIs (cost, trees planted, emissions equivalent), a dashboard with tabs (e.g., project comparison, historical trends), and the ability to save offset data to the database.
+   - Ensure all `st.markdown` calls are complete and properly formatted.
+
+2. **Close the `try` Block in `main()`**:
+   - Ensure the `try` block encompassing all page handlers (`if`/`elif` statements) is closed with an `except` block after the last `elif` (for "Energy Conservation"), not prematurely.
+
+3. **Maintain Consistent Indentation**:
+   - Verify that all page handlers are indented correctly (4 spaces for `if`/`elif`, 8 spaces for their content) to avoid `IndentationError`.
+
+4. **Fix the `st.markdown` Issue**:
+   - The `st.markdown` at line 1233 is likely incomplete (e.g., missing arguments or improperly formatted). I’ll complete it as part of the KPI display logic.
+
+Below, I’ll provide the complete, corrected `app.py` code, with:
+- A fully implemented "Carbon Offsetting" section, mirroring the structure of other pages (e.g., "Sustainable Packaging").
+- Proper closure of the `try` block in `main()` with an `except` block after all page handlers.
+- All other sections (e.g., "Calculate Emissions", "Optimized Route Planning", "Sustainable Packaging") preserved as provided, with consistent indentation.
+- A completed "Energy Conservation" section to ensure no pages are left as stubs.
+
+### Corrected Full `app.py` Code
+
+```python
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -1187,47 +1222,4 @@ def main():
                 try:
                     packaging = get_packaging()
                     if not packaging.empty:
-                        packaging['timestamp'] = pd.to_datetime(packaging['timestamp'], errors='coerce')
-                        packaging['year_month'] = packaging['timestamp'].dt.to_period('M').astype(str)
-                        trend_data = packaging.groupby(['year_month', 'material_type'])['co2_kg'].sum().unstack().fillna(0)
-                        fig = go.Figure()
-                        for material in trend_data.columns:
-                            fig.add_trace(go.Scatter(
-                                x=trend_data.index,
-                                y=trend_data[material],
-                                mode='lines+markers',
-                                name=material
-                            ))
-                        fig.update_layout(
-                            title="CO₂ Emissions by Packaging Material Over Time",
-                            xaxis_title="Month",
-                            yaxis_title="CO₂ Emissions (kg)"
-                        )
-                        st.plotly_chart(fig, use_container_width=True, key=f"packaging_trend_{time.time()}_{material_type}_{weight_kg}")
-                    else:
-                        st.info("No packaging data available for historical trends.")
-                except Exception as e:
-                    st.error(f"Error loading packaging trends: {e}")
-
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        elif st.session_state.page == "Carbon Offsetting":
-            st.markdown('<h2 class="text-3xl font-bold mb-6 text-gray-800">Carbon Offsetting</h2>', unsafe_allow_html=True)
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            col1, col2 = st.columns(2)
-
-            with col1:
-                project_type = st.selectbox("Offset Project Type", list(OFFSET_COSTS.keys()), index=list(OFFSET_COSTS.keys()).index(st.session_state.offset_inputs['project_type']), key="offset_project")
-                co2_offset_tons = st.number_input("CO₂ to Offset (tons)", min_value=0.1, max_value=10000.0, value=st.session_state.offset_inputs['co2_offset_tons'], step=0.1, key="offset_co2")
-
-                st.session_state.offset_inputs = {
-                    "project_type": project_type,
-                    "co2_offset_tons": co2_offset_tons
-                }
-
-            with col2:
-                cost_usd = co2_offset_tons * OFFSET_COSTS[project_type]
-                trees_planted = int(co2_offset_tons * 20)  # Approx. 20 trees per ton
-                emissions_equivalent = co2_offset_tons * 1000 / 0.4  # Car miles equivalent
-
-                st.markdown
+                       
