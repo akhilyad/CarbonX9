@@ -1133,7 +1133,7 @@ def main():
 
             st.markdown('</div>', unsafe_allow_html=True)
 
-       elif st.session_state.page == "Sustainable Packaging":
+       elif st.session_state.page == "Sustainable Packaging"
     st.markdown('<h2 class="text-3xl font-bold mb-6 text-gray-800">Sustainable Packaging</h2>', unsafe_allow_html=True)
     st.markdown('<div class="card">', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
