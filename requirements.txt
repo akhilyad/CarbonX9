@@ -1,8 +1,6 @@
 streamlit==1.38.0
-sqlite3
 pandas==2.2.2
 folium==0.17.0
 streamlit-folium==0.22.0
-uuid
 plotly==5.24.0
 geopy==2.4.1
