@@ -562,7 +562,7 @@ def main():
     if 'load_inputs' not in st.session_state:
         st.session_state.load_inputs = {'weight_tons': 10.0, 'vehicle_capacity_tons': 20.0, 'avg_trip_distance_km': 100.0}
     if 'energy_inputs' not in st.session_state:
-        st.session_state.energy_inputs = {'facility_size_m2': 1000, 'smart_system_usage': 0.5}
+        st.session_state.energy_inputs = {'facility_size_m2': 1000.0, 'smart_system_usage': 0.5}
 
     # Sidebar navigation
     with st.sidebar:
@@ -1441,14 +1441,14 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            facility_size_m2 = st.number_input(
-                "Facility Size (m²)",
-                min_value=100.0,
-                max_value=100000.0,
-                value=st.session_state.energy_inputs['facility_size_m2'],
-                step=100.0,
-                help="Enter the facility size in square meters."
-            )
+            default_facility_size = 1000.0
+            current_facility_size = st.session_state.energy_inputs.get('facility_size_m2', default_facility_size)
+            if not isinstance(current_facility_size, float) or current_facility_size < 100.0 or current_facility_size > 100000.0:
+                current_facility_size = default_facility_size
+
+            facility_size_m2 = st.number_input(    "Facility Size (m²)",    min_value=100.0,    max_value=100000.0,    value=current_facility_size,    step=100.0,    help="Enter the facility size in square meters.")
+# Update session state with the new value
+st.session_state.energy_inputs['facility_size_m2'] = facility_size_m2
             smart_system_usage = st.slider(
                 "Smart System Usage (%)",
                 0.0,
