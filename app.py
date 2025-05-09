@@ -1131,14 +1131,13 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            warehouse_size_m2 = st.number_input(
-                "Warehouse Size (m²)",
-                min_value=100.0,
-                max_value=100000.0,
-                value=st.session_state.warehouse_inputs['warehouse_size_m2'],
-                step=100.0,
-                help="Enter the warehouse size in square meters."
-            )
+            default_warehouse_size = 1000.0
+            current_warehouse_size = st.session_state.warehouse_inputs.get('warehouse_size_m2', default_warehouse_size)
+            if not isinstance(current_warehouse_size, float) or current_warehouse_size < 100.0 or current_warehouse_size > 100000.0:
+                current_warehouse_size = default_warehouse_size
+           warehouse_size_m2 = st.number_input("Warehouse Size (m²)",     min_value=100.0,     max_value=100000.0,     value=current_warehouse_size,     step=100.0,     help="Enter the warehouse size in square meters." )
+# Update session state with the new value
+st.session_state.warehouse_inputs['warehouse_size_m2'] = warehouse_size_m2
             led_percentage = st.slider(
                 "LED Lighting Usage (%)",
                 0.0,
