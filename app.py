@@ -569,7 +569,7 @@ def main():
         st.markdown(
             """
             <div style='display: flex; align-items: center; padding: 10px;'>
-                <h2 style='margin: 0; font-size: 24px; color: #2E7D32;'>Carbon 360</h2>
+                <h2 style='margin: 0; font-size: 24px; color: #2E7D32;'>Antova</h2>
             </div>
             <hr style='margin: 10px 0;'>
             """,
@@ -608,7 +608,7 @@ def main():
     st.markdown(
         """
         <div style='display: flex; align-items: center; padding: 10px;'>
-            <h1 style='margin: 0; font-size: 28px; color: #2E7D32;'>Carbon 360</h1>
+            <h1 style='margin: 0; font-size: 28px; color: #2E7D32;'>Antova</h1>
         </div>
         """,
         unsafe_allow_html=True
