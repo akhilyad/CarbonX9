@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.title("Contact Us")
-st.write("Email: contact@carbon360.com")
+st.write("Email: contact@antova.com")
 st.write("Phone: +49 176 7267 8553")
 
 # Footer with corrected links
