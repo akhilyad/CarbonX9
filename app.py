@@ -678,7 +678,8 @@ def main():
             if st.button("Reset Inputs"):  # NEW: Reset button
                 reset_calculate_emissions_inputs()
                 st.experimental_rerun()
-    
+        except Exception as e:
+                    handle_error(f" failed: {e}", f"Visualization failed: {str(e)}.")
     elif page == "Route Visualizer":
         st.header("Emission Hotspot Visualizer")
         try:
