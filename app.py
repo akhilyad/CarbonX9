@@ -673,7 +673,49 @@ def main():
             st.session_state.weight_tons = weight_tons
             try:
                 distance_km = calculate_distance(source_country, source_city, dest_country, dest_city)
-                st.write(f"Estimated Distance gerar a visualização: {str(e)}.")
+                st.write(f"Estimated Distance: {distance_km} km")  # FIXED: Corrected string and removed undefined 'e'
+            except ValueError as e:
+                handle_error(f"Distance calculation failed: {e}", f"Cannot calculate distance: {str(e)}. Please select different locations.")
+                distance_km = 0.0
+        
+        col_btn1, col_btn2 = st.columns([1, 1])
+        with col_btn1:
+            if st.button("Calculate Emissions") and distance_km > 0:
+                try:
+                    co2_kg = calculate_co2(source_country, source_city, dest_country, dest_city, transport_mode, distance_km, weight_tons)
+                    carbon_cost_eur = co2_kg / 1000 * CARBON_PRICE_EUR_PER_TON
+                    source = f"{source_city}, {source_country}"
+                    destination = f"{dest_city}, {dest_country}"
+                    trees_equivalent = co2_kg * 0.04
+                    
+                    st.subheader("Emission Results")
+                    col3, col4, col5, col6 = st.columns(4)
+                    with col3:
+                        st.metric("CO2 Emissions", f"{co2_kg:.2f} kg")
+                    with col4:
+                        st.metric("Carbon Cost (EUR)", f"{carbon_cost_eur:.2f}")
+                    with col5:
+                        st.metric("Distance", f"{distance_km:.2f} km")
+                    with col6:
+                        st.metric("Trees to Offset", f"{int(trees_equivalent)}")
+                    
+                    save_emission(source, destination, transport_mode, distance_km, co2_kg, weight_tons)
+                    
+                    m = folium.Map(location=[get_coordinates(source_country, source_city)], zoom_start=4)
+                    folium.PolyLine(
+                        locations=[get_coordinates(source_country, source_city), get_coordinates(dest_country, dest_city)],
+                        color='blue',
+                        weight=5,
+                        popup=f"{source} to {destination}: {co2_kg:.2f} kg CO2"
+                    ).add_to(m)
+                    folium_static(m, width=1200, height=400)
+                except ValueError as e:
+                    handle_error(f"Emission calculation failed: {e}", f"Cannot calculate emissions: {str(e)}.")
+        with col_btn2:
+            if st.button("Reset Inputs"):  # NEW: Reset button
+                reset_calculate_emissions_inputs()
+                st.experimental_rerun()
+    
     elif page == "Route Visualizer":
         st.header("Emission Hotspot Visualizer")
         try:
@@ -1018,7 +1060,7 @@ def main():
                 distance_km = calculate_distance(source_country, source_city, dest_country, dest_city)
                 st.write(f"Estimated Distance: {distance_km} km")
             except ValueError as e:
-                handle_error(str(e), f"Cannot calculate distance: {str(e)}. Please select different locations.")
+                handle_error(f"Distance calculation failed: {e}", f"Cannot calculate distance: {str(e)}. Please select different locations.")
                 distance_km = 0.0
         
         if st.button("Optimize Route") and distance_km > 0:
@@ -1425,7 +1467,7 @@ def main():
                 traditional_energy_kwh = facility_size_m2 * 150
                 energy_savings_kwh = traditional_energy_kwh * smart_system_usage * 0.4
                 co2_savings_kg = energy_savings_kwh * 0.5
-                cost_savings = energy_savings_kwh * 0.15  # Fixed: Completed calculation
+                cost_savings = energy_savings_kwh * 0.15
                 household_equivalent = energy_savings_kwh / 10000
                 
                 st.subheader("Energy Conservation Metrics")
@@ -1453,7 +1495,7 @@ def main():
                     
                     with tab2:
                         sizes = range(100, int(facility_size_m2) + 1000, 1000)
-                        savings = [traditional_energy_kwh * smart_system_usage * 0.4 * 0.5 for traditional_energy_kwh in [size * 150 for size in sizes]]
+                        savings = [facility_size * 150 * smart_system_usage * 0.4 * 0.5 for facility_size in sizes]
                         fig = px.line(
                             x=sizes,
                             y=savings,
