@@ -11,10 +11,10 @@ from plotly.subplots import make_subplots
 import time
 import datetime
 import logging
-from geopy.geocoders import Nominatim  # NEW: For geocoding
-from folium.plugins import MarkerCluster  # NEW: For marker clustering
+from geopy.geocoders import Nominatim
+from folium.plugins import MarkerCluster
 
-# NEW: Configure logging
+# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Initialize SQLite database
@@ -44,7 +44,7 @@ def init_db():
             c.execute('''CREATE TABLE IF NOT EXISTS offsets 
                         (id TEXT PRIMARY KEY, project_type TEXT, co2_offset_tons REAL, 
                          cost_usd REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
-            # NEW: Create coordinates table for geocoding cache
+            # Create coordinates table for geocoding cache
             c.execute('''CREATE TABLE IF NOT EXISTS coordinates 
                         (country TEXT, city TEXT, lat REAL, lon REAL, PRIMARY KEY (country, city))''')
             # Add indexes
@@ -78,13 +78,13 @@ def init_db():
     except sqlite3.Error as e:
         handle_error(f"Database initialization failed: {e}")
 
-# NEW: Centralized error handling
+# Centralized error handling
 def handle_error(message, user_message=None):
     """Log errors and display user-friendly messages."""
     logging.error(message)
     st.error(user_message or f"An error occurred: {message}. Please try again or contact support.")
 
-# NEW: Cleanup old records
+# Cleanup old records
 def cleanup_old_records(retention_days=365):
     """Remove records older than retention_days from emissions, packaging, and offsets tables."""
     try:
@@ -99,7 +99,7 @@ def cleanup_old_records(retention_days=365):
     except sqlite3.Error as e:
         handle_error(f"Database cleanup failed: {e}", "Failed to clean up old records.")
 
-# DEFRA-based emission factors (kg CO₂ per km per ton)
+# DEFRA-based emission factors (kg CO2 per km per ton)
 EMISSION_FACTORS = {
     'Truck': 0.096,
     'Train': 0.028,
@@ -120,7 +120,7 @@ LOCATIONS = {
     'Australia': {'Sydney': (-33.8688, 151.2093)}
 }
 
-# NEW: Simulated carbon price fetch
+# Simulated carbon price fetch
 def fetch_carbon_price():
     """Simulate fetching carbon price from an API (e.g., EU ETS)."""
     try:
@@ -132,7 +132,7 @@ def fetch_carbon_price():
         handle_error(f"Failed to fetch carbon price: {e}", "Using default carbon price.")
         return 65.89
 
-# UPDATED: Dynamic carbon pricing
+# Dynamic carbon pricing
 CARBON_PRICE_EUR_PER_TON = fetch_carbon_price()
 EXCHANGE_RATES = {
     'EUR': 1.0,
@@ -162,7 +162,7 @@ PACKAGING_COSTS = {
     'Reusable': 3.0
 }
 
-# NEW: Enhanced geocoding with caching
+# Enhanced geocoding with caching
 def get_coordinates(country, city):
     """Get coordinates for a country and city, using cached data or geocoding API."""
     try:
@@ -210,7 +210,7 @@ def calculate_distance(country1, city1, country2, city2):
     return round(R * c, 2)
 
 def calculate_co2(country1, city1, country2, city2, transport_mode, distance_km, weight_tons):
-    """Calculate CO₂ emissions for a shipment."""
+    """Calculate CO2 emissions for a shipment."""
     if weight_tons <= 0:
         raise ValueError("Weight must be positive.")
     if distance_km <= 0:
@@ -222,7 +222,7 @@ def calculate_co2(country1, city1, country2, city2, transport_mode, distance_km,
     return round(co2_kg, 2)
 
 def optimize_route(country1, city1, country2, city2, distance_km, weight_tons, prioritize_green=False):
-    """Optimize transport route to minimize CO₂ emissions."""
+    """Optimize transport route to minimize CO2 emissions."""
     if weight_tons <= 0:
         raise ValueError("Weight must be positive.")
     if distance_km <= 0:
@@ -332,7 +332,7 @@ def get_emissions():
         handle_error(f"Failed to retrieve emissions: {e}", "Could not load emission data.")
         return pd.DataFrame()
 
-# NEW: Enhanced timestamp handling
+# Enhanced timestamp handling
 def get_packaging():
     """Retrieve all packaging emission records, handling invalid timestamps."""
     try:
@@ -359,7 +359,7 @@ def get_offsets():
         handle_error(f"Failed to retrieve offsets: {e}", "Could not load offset data.")
         return pd.DataFrame()
 
-# UPDATED: Include created_at filtering
+# Include created_at filtering
 def get_suppliers(country=None, city=None, material=None, min_green_score=0, min_date=None):
     """Retrieve suppliers based on filters, including creation date."""
     try:
@@ -388,7 +388,7 @@ def get_suppliers(country=None, city=None, material=None, min_green_score=0, min
         return pd.DataFrame()
 
 def calculate_warehouse_savings(warehouse_size_m2, led_percentage, solar_percentage):
-    """Calculate CO₂ and energy savings from green warehousing technologies."""
+    """Calculate CO2 and energy savings from green warehousing technologies."""
     if warehouse_size_m2 <= 0:
         raise ValueError("Warehouse size must be positive.")
     if not (0 <= led_percentage <= 1 and 0 <= solar_percentage <= 1):
@@ -401,7 +401,7 @@ def calculate_warehouse_savings(warehouse_size_m2, led_percentage, solar_percent
     return round(co2_savings_kg, 2), round(total_savings_kwh, 2)
 
 def calculate_load_optimization(weight_tons, vehicle_capacity_tons, avg_trip_distance_km=100):
-    """Calculate CO₂ savings from efficient load management."""
+    """Calculate CO2 savings from efficient load management."""
     if weight_tons <= 0 or vehicle_capacity_tons <= 0 or avg_trip_distance_km <= 0:
         raise ValueError("Weight, capacity, and distance must be positive.")
     trips_without_optimization = math.ceil(weight_tons / (vehicle_capacity_tons * 0.90))
@@ -410,7 +410,7 @@ def calculate_load_optimization(weight_tons, vehicle_capacity_tons, avg_trip_dis
     co2_savings_kg = trips_saved * avg_trip_distance_km * EMISSION_FACTORS['Truck']
     return trips_saved, round(co2_savings_kg, 2)
 
-# NEW: Optimized map rendering with clustering
+# Optimized map rendering with clustering
 def render_map(emissions):
     """Render a Folium map with clustered markers and limited routes for performance."""
     valid_coords = []
@@ -431,7 +431,7 @@ def render_map(emissions):
     m = folium.Map(location=[avg_lat, avg_lon], zoom_start=2, tiles='OpenStreetMap')
     marker_cluster = MarkerCluster().add_to(m)
     
-    # Limit to top 100 routes by CO₂
+    # Limit to top 100 routes by CO2
     emissions = emissions.nlargest(100, 'co2_kg')
     for _, row in emissions.iterrows():
         source_coords = get_coordinates(row['source_country'], row['source_city'])
@@ -457,7 +457,7 @@ def render_map(emissions):
     
     legend_html = '''
     <div style="position: fixed; bottom: 50px; left: 50px; z-index: 1000; padding: 10px; background-color: white; border: 2px solid black; border-radius: 5px;">
-        <p><strong>CO₂ Emission Legend</strong></p>
+        <p><strong>CO2 Emission Legend</strong></p>
         <p><span style="color: green;">■</span> Low (<500 kg)</p>
         <p><span style="color: orange;">■</span> Medium (500-1000 kg)</p>
         <p><span style="color: red;">■</span> High (>1000 kg)</p>
@@ -466,7 +466,7 @@ def render_map(emissions):
     m.get_root().html.add_child(folium.Element(legend_html))
     return m
 
-# NEW: Reset input functions
+# Reset input functions
 def reset_calculate_emissions_inputs():
     """Reset inputs for Calculate Emissions page."""
     st.session_state.source_country = next(iter(LOCATIONS))
@@ -496,7 +496,7 @@ def reset_energy_inputs():
     st.session_state.energy_inputs = {'facility_size_m2': 1000, 'smart_system_usage': 0.5}
 
 def main():
-    st.set_page_config(page_title="CO₂ Emission Calculator", layout="wide")
+    st.set_page_config(page_title="CO2 Emission Calculator", layout="wide")
     
     # Apply custom CSS
     st.markdown("""
@@ -616,7 +616,7 @@ def main():
 
     # Page content
     if page == "Calculate Emissions":
-        st.header("Calculate CO₂ Emissions")
+        st.header("Calculate CO2 Emissions")
         col1, col2 = st.columns(2)
         
         with col1:
@@ -673,41 +673,7 @@ def main():
             st.session_state.weight_tons = weight_tons
             try:
                 distance_km = calculate_distance(source_country, source_city, dest_country, dest_city)
-                st.write(f"Estimated Distance: {distance_km} km")
-            except ValueError as e:
-                handle_error(str(e), f"Cannot calculate distance: {str(e)}. Please select different locations.")
-                distance_km = 0.0
-        
-        col_btn1, col_btn2 = st.columns([1, 1])
-        with col_btn1:
-            if st.button("Calculate") and distance_km > 0:
-                source = f"{source_city}, {source_country}"
-                destination = f"{dest_city}, {dest_country}"
-                try:
-                    co2_kg = calculate_co2(source_country, source_city, dest_country, dest_city, transport_mode, distance_km, weight_tons)
-                    st.success(f"Estimated CO₂ Emissions: {co2_kg} kg")
-                    save_emission(source, destination, transport_mode, distance_km, co2_kg, weight_tons)
-                    
-                    st.subheader("Calculation Dashboard")
-                    col3, col4 = st.columns(2)
-                    with col3:
-                        st.metric("Total Distance", f"{distance_km} km")
-                        st.metric("Total CO₂ Emissions", f"{co2_kg} kg")
-                    with col4:
-                        st.metric("Emission Factor", f"{EMISSION_FACTORS[transport_mode]} kg CO₂/km/ton")
-                        st.metric("Weight", f"{weight_tons} tons")
-                    
-                    with st.expander("Calculation Methodology"):
-                        st.write("**Distance Calculation**")
-                        st.write("The distance is calculated using the **Haversine Formula**, which computes the great-circle distance between two points on a sphere.")
-                        st.write(f"Coordinates: {source_city} ({get_coordinates(source_country, source_city)}), {dest_city} ({get_coordinates(dest_country, dest_city)})")
-                        
-                        st.write("**CO₂ Emission Calculation**")
-                        st.write("CO₂ = Distance (km) × Weight (tons) × Emission Factor")
-                        st.write(f"Calculation: {distance_km} km × {weight_tons} tons × {EMISSION_FACTORS[transport_mode]} = {co2_kg} kg")
-                        st.write("**Emission Factors**: Based on DEFRA guidelines (kg CO₂ per km per ton).")
-                except ValueError as e:
-                    handle_error(str(e), f"Calculation failed: {str(e)}. Please check inputs.")
+                st.write(f"Estimated Distance gerar a visualização: {str(e)}.")
         with col_btn2:
             if st.button("Reset Inputs"):  # NEW: Reset button
                 reset_calculate_emissions_inputs()
@@ -760,21 +726,21 @@ def main():
                     with col1:
                         st.metric("Total Distance", f"{distance_km:.2f} km")
                     with col2:
-                        st.metric("Current CO₂ Emissions", f"{current_co2:.2f} kg")
+                        st.metric("Current CO2 Emissions", f"{current_co2:.2f} kg")
                     with col3:
-                        st.metric("Optimized CO₂ Emissions", f"{min_co2:.2f} kg")
+                        st.metric("Optimized CO2 Emissions", f"{min_co2:.2f} kg")
                     with col4:
-                        st.metric("CO₂ Savings", f"{savings:.2f} kg ({savings_pct:.1f}% reduction)")
+                        st.metric("CO2 Savings", f"{savings:.2f} kg ({savings_pct:.1f}% reduction)")
                     
                     tab1, tab2 = st.tabs(["Route Breakdown", "Comparison Chart"])
                     
                     with tab1:
                         st.write("**Optimized Route Breakdown**")
                         if mode2:
-                            st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
-                            st.write(f"- **{mode2}**: {dist2:.2f} km, CO₂: {co2_2:.2f} kg")
+                            st.write(f"- **{mode1}**: {dist1:.2f} km, CO2: {co2_1:.2f} kg")
+                            st.write(f"- **{mode2}**: {dist2:.2f} km, CO2: {co2_2:.2f} kg")
                         else:
-                            st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
+                            st.write(f"- **{mode1}**: {dist1:.2f} km, CO2: {co2_1:.2f} kg")
                     
                     with tab2:
                         fig = go.Figure()
@@ -782,7 +748,7 @@ def main():
                             x=[current_co2, min_co2],
                             y=['Current Route', 'Optimized Route'],
                             orientation='h',
-                            name='CO₂ Emissions (kg)',
+                            name='CO2 Emissions (kg)',
                             marker_color=['#FF4B4B', '#36A2EB']
                         ))
                         fig.add_trace(go.Bar(
@@ -834,7 +800,7 @@ def main():
                 50,
                 help="Filter suppliers with a green score above this value (0-100)."
             )
-            min_date = st.date_input(  # NEW: Date filter
+            min_date = st.date_input(
                 "Added After",
                 value=None,
                 help="Show suppliers added after this date (optional)."
@@ -872,14 +838,14 @@ def main():
                         if not local_suppliers.empty:
                             potential_savings = current_co2
                             st.success(
-                                f"🌍 **Local Sourcing Opportunity**: Source from {dest_country} to save {potential_savings:.2f} kg CO₂."
+                                f"🌍 **Local Sourcing Opportunity**: Source from {dest_country} to save {potential_savings:.2f} kg CO2."
                             )
                         else:
                             st.info(f"No suppliers found in {dest_country}.")
                     except ValueError as e:
                         handle_error(f"Savings calculation failed: {e}", f"Cannot calculate savings: {str(e)}.")
                 with col7:
-                    st.metric("Potential CO₂ Savings", f"{potential_savings:.2f} kg")
+                    st.metric("Potential CO2 Savings", f"{potential_savings:.2f} kg")
                 
                 st.subheader("Supplier Insights")
                 tab1, tab2, tab3 = st.tabs(["Supplier Distribution", "Material Availability", "Supplier Details"])
@@ -895,7 +861,7 @@ def main():
                     st.plotly_chart(fig, use_container_width=True, key=f"material_availability_{time.time()}")
                 
                 with tab3:
-                    st.dataframe(suppliers[['supplier_name', 'country', 'city', 'material', 'green_score', 'sustainable_practices', 'created_at']])  # UPDATED: Include created_at
+                    st.dataframe(suppliers[['supplier_name', 'country', 'city', 'material', 'green_score', 'sustainable_practices', 'created_at']])
             else:
                 st.info("No suppliers found for the given criteria.")
         except Exception as e:
@@ -935,40 +901,40 @@ def main():
                             'Route': f"{source_city}, {source_country} to {dest_city}, {dest_country}",
                             'Old Mode': current_mode,
                             'Old Distance': distance_km,
-                            'Old CO₂': current_co2,
+                            'Old CO2': current_co2,
                             'New Modes': f"{mode1} + {mode2 if mode2 else 'None'}",
                             'New Distances': f"{dist1:.2f} km ({mode1}) + {dist2:.2f} km ({mode2 if mode2 else 'N/A'})",
-                            'New CO₂': min_co2,
+                            'New CO2': min_co2,
                             'Savings': savings
                         })
                     except ValueError as e:
                         st.warning(f"Skipping route optimization for {source_city} to {dest_city}: {e}")
                 
-                tab1, tab2, tab3, tab4 = st.tabs(["Summary", "CO₂ Insights", "Route Optimization", "Detailed Data"])
+                tab1, tab2, tab3, tab4 = st.tabs(["Summary", "CO2 Insights", "Route Optimization", "Detailed Data"])
                 
                 with tab1:
                     st.subheader("Summary Statistics")
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("Total CO₂ Emissions", f"{total_co2:.2f} kg")
+                        st.metric("Total CO2 Emissions", f"{total_co2:.2f} kg")
                     with col2:
                         st.metric("Total Shipments", f"{total_shipments}")
                     with col3:
-                        st.metric("Average CO₂ per Shipment", f"{avg_co2:.2f} kg")
+                        st.metric("Average CO2 per Shipment", f"{avg_co2:.2f} kg")
                     with col4:
-                        st.metric("Total CO₂ Savings", f"{total_savings:.2f} kg")
+                        st.metric("Total CO2 Savings", f"{total_savings:.2f} kg")
                     
                     st.subheader("Emission Breakdown by Transport Mode")
                     mode_summary = emissions.groupby('transport_mode')['co2_kg'].sum().reset_index()
-                    fig = px.pie(mode_summary, values='co2_kg', names='transport_mode', title="CO₂ by Mode")
+                    fig = px.pie(mode_summary, values='co2_kg', names='transport_mode', title="CO2 by Mode")
                     st.plotly_chart(fig, use_container_width=True, key=f"emission_breakdown_{time.time()}")
                 
                 with tab2:
-                    st.subheader("CO₂ Impact Insights")
+                    st.subheader("CO2 Impact Insights")
                     smartphone_charges = total_co2 * 1000 / 0.008
                     ev_distance = total_co2 / 0.2
                     trees_needed = total_co2 * 0.04
-                    st.write(f"**Environmental Impact**: The {total_co2:.2f} kg of CO₂ could:")
+                    st.write(f"**Environmental Impact**: The {total_co2:.2f} kg of CO2 could:")
                     st.write(f"- Charge {int(smartphone_charges):,} smartphones.")
                     st.write(f"- Power an EV for {ev_distance:.0f} km.")
                     st.write(f"- Be offset by planting {int(trees_needed):,} trees.")
@@ -1078,37 +1044,37 @@ def main():
                     locations=[get_coordinates(source_country, source_city), get_coordinates(dest_country, dest_city)],
                     color='blue',
                     weight=5,
-                    popup=f"Optimized Route: {min_co2:.2f} kg CO₂"
+                    popup=f"Optimized Route: {min_co2:.2f} kg CO2"
                 ).add_to(m)
                 folium_static(m, width=1200, height=400)
                 
                 st.subheader("Optimization Results")
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Optimized CO₂ Emissions", f"{min_co2:.2f} kg")
+                    st.metric("Optimized CO2 Emissions", f"{min_co2:.2f} kg")
                 with col2:
-                    st.metric("CO₂ Savings", f"{savings:.2f} kg ({savings_pct:.1f}%)")
+                    st.metric("CO2 Savings", f"{savings:.2f} kg ({savings_pct:.1f}%)")
                 with col3:
                     st.metric("Cost Savings (EUR)", f"{cost_savings_eur:.2f}")
                 with col4:
                     st.metric("Trees Equivalent", f"{int(trees_equivalent)}")
                 
-                tab1, tab2, tab3 = st.tabs(["Route Breakdown", "CO₂ Comparison", "Mode Contribution"])
+                tab1, tab2, tab3 = st.tabs(["Route Breakdown", "CO2 Comparison", "Mode Contribution"])
                 
                 with tab1:
                     st.write("**Optimized Route Breakdown**")
                     if mode2:
-                        st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
-                        st.write(f"- **{mode2}**: {dist2:.2f} km, CO₂: {co2_2:.2f} kg")
+                        st.write(f"- **{mode1}**: {dist1:.2f} km, CO2: {co2_1:.2f} kg")
+                        st.write(f"- **{mode2}**: {dist2:.2f} km, CO2: {co2_2:.2f} kg")
                     else:
-                        st.write(f"- **{mode1}**: {dist1:.2f} km, CO₂: {co2_1:.2f} kg")
+                        st.write(f"- **{mode1}**: {dist1:.2f} km, CO2: {co2_1:.2f} kg")
                 
                 with tab2:
                     fig = px.bar(
                         x=[current_co2, min_co2],
                         y=['Current Route', 'Optimized Route'],
-                        title="CO₂ Emissions Comparison",
-                        labels={'x': 'CO₂ Emissions (kg)', 'y': 'Route'}
+                        title="CO2 Emissions Comparison",
+                        labels={'x': 'CO2 Emissions (kg)', 'y': 'Route'}
                     )
                     st.plotly_chart(fig, use_container_width=True, key=f"co2_comparison_{time.time()}")
                 
@@ -1116,7 +1082,7 @@ def main():
                     fig = go.Figure(go.Indicator(
                         mode="gauge+number",
                         value=savings_pct,
-                        title={'text': "CO₂ Reduction (%)"},
+                        title={'text': "CO2 Reduction (%)"},
                         gauge={'axis': {'range': [0, 100]}, 'bar': {'color': "#36A2EB"}}
                     ))
                     st.plotly_chart(fig, use_container_width=True, key=f"efficiency_gauge_{time.time()}")
@@ -1163,7 +1129,7 @@ def main():
                 car_miles_equivalent = co2_savings_kg / 0.4
                 
                 st.subheader("Savings Metrics")
-                st.metric("CO₂ Savings", f"{co2_savings_kg:.2f} kg")
+                st.metric("CO2 Savings", f"{co2_savings_kg:.2f} kg")
                 st.metric("Energy Savings", f"{energy_savings_kwh:.2f} kWh")
                 st.metric("Cost Savings (USD)", f"{energy_cost_savings:.2f}")
                 st.metric("Car Miles Equivalent", f"{int(car_miles_equivalent)} miles")
@@ -1180,8 +1146,8 @@ def main():
                         fig = px.bar(
                             x=['LED Lighting', 'Solar Panels'],
                             y=[led_percentage * co2_savings_kg, solar_percentage * co2_savings_kg],
-                            title="CO₂ Savings by Technology",
-                            labels={'x': 'Technology', 'y': 'CO₂ Savings (kg)'}
+                            title="CO2 Savings by Technology",
+                            labels={'x': 'Technology', 'y': 'CO2 Savings (kg)'}
                         )
                         st.plotly_chart(fig, use_container_width=True, key=f"warehouse_savings_{time.time()}")
                     
@@ -1191,14 +1157,14 @@ def main():
                         fig = px.line(
                             x=sizes,
                             y=savings,
-                            title="CO₂ Savings vs Warehouse Size",
-                            labels={'x': 'Warehouse Size (m²)', 'y': 'CO₂ Savings (kg)'}
+                            title="CO2 Savings vs Warehouse Size",
+                            labels={'x': 'Warehouse Size (m²)', 'y': 'CO2 Savings (kg)'}
                         )
                         st.plotly_chart(fig, use_container_width=True, key=f"warehouse_trend_{time.time()}")
                 except ValueError as e:
                     handle_error(f"Warehouse visualization failed: {e}", f"Visualization failed: {str(e)}.")
         with col_btn2:
-            if st.button("Reset Inputs"):  # NEW: Reset button
+            if st.button("Reset Inputs"):
                 reset_warehouse_inputs()
                 st.experimental_rerun()
     
@@ -1232,14 +1198,14 @@ def main():
                 plastic_bottles_equivalent = co2_kg / 0.082
                 
                 st.subheader("Packaging Metrics")
-                st.metric("CO₂ Emissions", f"{co2_kg:.2f} kg")
-                st.metric("Potential CO₂ Savings", f"{potential_savings:.2f} kg")
+                st.metric("CO2 Emissions", f"{co2_kg:.2f} kg")
+                st.metric("Potential CO2 Savings", f"{potential_savings:.2f} kg")
                 st.metric("Cost Impact (USD)", f"{cost_impact:.2f}")
                 st.metric("Plastic Bottles Equivalent", f"{int(plastic_bottles_equivalent)} bottles")
                 
                 save_packaging(material_type, weight_kg, co2_kg)
                 if material_type != 'Biodegradable':
-                    st.success(f"Switch to Biodegradable to save {potential_savings:.2f} kg CO₂!")
+                    st.success(f"Switch to Biodegradable to save {potential_savings:.2f} kg CO2!")
             except Exception as e:
                 handle_error(f"Packaging calculation failed: {e}", f"Calculation failed: {str(e)}.")
         
@@ -1254,8 +1220,8 @@ def main():
                         fig = px.bar(
                             x=list(PACKAGING_EMISSIONS.keys()),
                             y=[weight_kg * PACKAGING_EMISSIONS[mat] for mat in PACKAGING_EMISSIONS],
-                            title="CO₂ Emissions by Material",
-                            labels={'x': 'Material', 'y': 'CO₂ Emissions (kg)'}
+                            title="CO2 Emissions by Material",
+                            labels={'x': 'Material', 'y': 'CO2 Emissions (kg)'}
                         )
                         st.plotly_chart(fig, use_container_width=True, key=f"packaging_comparison_{time.time()}")
                     
@@ -1266,7 +1232,7 @@ def main():
                                 x='timestamp',
                                 y='co2_kg',
                                 title="Historical Packaging Emissions",
-                                labels={'timestamp': 'Date', 'co2_kg': 'CO₂ Emissions (kg)'}
+                                labels={'timestamp': 'Date', 'co2_kg': 'CO2 Emissions (kg)'}
                             )
                             st.plotly_chart(fig, use_container_width=True, key=f"packaging_trends_{time.time()}")
                         else:
@@ -1274,7 +1240,7 @@ def main():
                 except Exception as e:
                     handle_error(f"Packaging visualization failed: {e}", f"Visualization failed: {str(e)}.")
         with col_btn2:
-            if st.button("Reset Inputs"):  # NEW: Reset button
+            if st.button("Reset Inputs"):
                 reset_packaging_inputs()
                 st.experimental_rerun()
     
@@ -1290,12 +1256,12 @@ def main():
                 help="Select the carbon offset project type."
             )
             co2_offset_tons = st.number_input(
-                "CO₂ to Offset (tons)",
+                "CO2 to Offset (tons)",
                 min_value=0.1,
                 max_value=10000.0,
                 value=st.session_state.offset_inputs['co2_offset_tons'],
                 step=0.1,
-                help="Enter the amount of CO₂ to offset in tons."
+                help="Enter the amount of CO2 to offset in tons."
             )
             st.session_state.offset_inputs = {'project_type': project_type, 'co2_offset_tons': co2_offset_tons}
         
@@ -1306,7 +1272,7 @@ def main():
                 efficiency = cost_usd / co2_offset_tons
                 
                 st.subheader("Offset Metrics")
-                st.metric("CO₂ Offset", f"{co2_offset_tons:.2f} tons")
+                st.metric("CO2 Offset", f"{co2_offset_tons:.2f} tons")
                 st.metric("Total Cost (USD)", f"{cost_usd:.2f}")
                 st.metric("Trees Equivalent", f"{int(trees_equivalent)}")
                 st.metric("Efficiency ($/ton)", f"{efficiency:.2f}")
@@ -1328,7 +1294,7 @@ def main():
                                 offsets.groupby('project_type')['co2_offset_tons'].sum().reset_index(),
                                 values='co2_offset_tons',
                                 names='project_type',
-                                title="CO₂ Offset by Project"
+                                title="CO2 Offset by Project"
                             )
                             st.plotly_chart(fig, use_container_width=True, key=f"offset_distribution_{time.time()}")
                         else:
@@ -1340,7 +1306,7 @@ def main():
                                 offsets,
                                 x='project_type',
                                 y='cost_usd',
-                                title="Cost vs CO₂ Offset",
+                                title="Cost vs CO2 Offset",
                                 labels={'project_type': 'Project Type', 'cost_usd': 'Cost (USD)'}
                             )
                             st.plotly_chart(fig, use_container_width=True, key=f"offset_cost_{time.time()}")
@@ -1349,7 +1315,7 @@ def main():
                 except Exception as e:
                     handle_error(f"Offset visualization failed: {e}", f"Visualization failed: {str(e)}.")
         with col_btn2:
-            if st.button("Reset Inputs"):  # NEW: Reset button
+            if st.button("Reset Inputs"):
                 reset_offset_inputs()
                 st.experimental_rerun()
     
@@ -1396,7 +1362,7 @@ def main():
                 
                 st.subheader("Load Optimization Metrics")
                 st.metric("Trips Saved", f"{trips_saved}")
-                st.metric("CO₂ Savings", f"{co2_savings_kg:.2f} kg")
+                st.metric("CO2 Savings", f"{co2_savings_kg:.2f} kg")
                 st.metric("Fuel Cost Savings (USD)", f"{fuel_cost_savings:.2f}")
                 st.metric("Flights Equivalent", f"{int(flights_equivalent)} flights")
             except ValueError as e:
@@ -1410,7 +1376,7 @@ def main():
                     
                     with tab1:
                         fig = px.bar(
-                            x=['Trips Saved', 'CO₂ Savings'],
+                            x=['Trips Saved', 'CO2 Savings'],
                             y=[trips_saved, co2_savings_kg],
                             title="Load Optimization Savings",
                             labels={'x': 'Metric', 'y': 'Value'}
@@ -1423,14 +1389,14 @@ def main():
                         fig = px.line(
                             x=weights,
                             y=savings,
-                            title="CO₂ Savings vs Total Weight",
-                            labels={'x': 'Total Weight (tons)', 'y': 'CO₂ Savings (kg)'}
+                            title="CO2 Savings vs Total Weight",
+                            labels={'x': 'Total Weight (tons)', 'y': 'CO2 Savings (kg)'}
                         )
                         st.plotly_chart(fig, use_container_width=True, key=f"load_sensitivity_{time.time()}")
                 except ValueError as e:
                     handle_error(f"Load visualization failed: {e}", f"Visualization failed: {str(e)}.")
         with col_btn2:
-            if st.button("Reset Inputs"):  # NEW: Reset button
+            if st.button("Reset Inputs"):
                 reset_load_inputs()
                 st.experimental_rerun()
     
@@ -1464,4 +1430,48 @@ def main():
                 traditional_energy_kwh = facility_size_m2 * 150
                 energy_savings_kwh = traditional_energy_kwh * smart_system_usage * 0.4
                 co2_savings_kg = energy_savings_kwh * 0.5
-                cost_savings = energy_savings_kwh * 0.5
+                cost_savings = energy_savings_kwh * 0.15  # Fixed: Completed calculation
+                household_equivalent = energy_savings_kwh / 10000
+                
+                st.subheader("Energy Conservation Metrics")
+                st.metric("CO2 Savings", f"{co2_savings_kg:.2f} kg")
+                st.metric("Energy Savings", f"{energy_savings_kwh:.2f} kWh")
+                st.metric("Cost Savings (USD)", f"{cost_savings:.2f}")
+                st.metric("Household Equivalent", f"{int(household_equivalent)} households")
+            except ValueError as e:
+                handle_error(f"Energy conservation calculation failed: {e}", f"Calculation failed: {str(e)}.")
+        
+        col_btn1, col_btn2 = st.columns([1, 1])
+        with col_btn1:
+            if st.button("Analyze Energy Savings"):
+                try:
+                    tab1, tab2 = st.tabs(["Savings Breakdown", "Size Sensitivity"])
+                    
+                    with tab1:
+                        fig = px.bar(
+                            x=['Smart Systems'],
+                            y=[co2_savings_kg],
+                            title="CO2 Savings from Smart Systems",
+                            labels={'x': 'Technology', 'y': 'CO2 Savings (kg)'}
+                        )
+                        st.plotly_chart(fig, use_container_width=True, key=f"energy_savings_{time.time()}")
+                    
+                    with tab2:
+                        sizes = range(100, int(facility_size_m2) + 1000, 1000)
+                        savings = [traditional_energy_kwh * smart_system_usage * 0.4 * 0.5 for traditional_energy_kwh in [size * 150 for size in sizes]]
+                        fig = px.line(
+                            x=sizes,
+                            y=savings,
+                            title="CO2 Savings vs Facility Size",
+                            labels={'x': 'Facility Size (m²)', 'y': 'CO2 Savings (kg)'}
+                        )
+                        st.plotly_chart(fig, use_container_width=True, key=f"energy_sensitivity_{time.time()}")
+                except ValueError as e:
+                    handle_error(f"Energy visualization failed: {e}", f"Visualization failed: {str(e)}.")
+        with col_btn2:
+            if st.button("Reset Inputs"):
+                reset_energy_inputs()
+                st.experimental_rerun()
+
+if __name__ == "__main__":
+    main()
