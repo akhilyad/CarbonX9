@@ -119,6 +119,10 @@ LOCATIONS = {
     'Japan': {'Tokyo': (35.6762, 139.6503)},
     'Australia': {'Sydney': (-33.8688, 151.2093)}
 }
+if location and hasattr(location, 'latitude') and hasattr(location, 'longitude'):
+    lat, lon = float(location.latitude), float(location.longitude)
+else:
+    raise ValueError("Invalid geocoding response")
 
 # Simulated carbon price fetch
 def fetch_carbon_price():
