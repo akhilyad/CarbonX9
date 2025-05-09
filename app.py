@@ -674,12 +674,6 @@ def main():
             try:
                 distance_km = calculate_distance(source_country, source_city, dest_country, dest_city)
                 st.write(f"Estimated Distance gerar a visualização: {str(e)}.")
-        with col_btn2:
-            if st.button("Reset Inputs"):  # NEW: Reset button
-                reset_calculate_emissions_inputs()
-                st.experimental_rerun()
-        except Exception as e:
-                    handle_error(f" failed: {e}", f"Visualization failed: {str(e)}.")
     elif page == "Route Visualizer":
         st.header("Emission Hotspot Visualizer")
         try:
