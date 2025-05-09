@@ -1448,7 +1448,7 @@ def main():
 
             facility_size_m2 = st.number_input(    "Facility Size (m²)",    min_value=100.0,    max_value=100000.0,    value=current_facility_size,    step=100.0,    help="Enter the facility size in square meters.")
 # Update session state with the new value
-st.session_state.energy_inputs['facility_size_m2'] = facility_size_m2
+            st.session_state.energy_inputs['facility_size_m2'] = facility_size_m2
             smart_system_usage = st.slider(
                 "Smart System Usage (%)",
                 0.0,
