@@ -1137,7 +1137,7 @@ def main():
                 current_warehouse_size = default_warehouse_size
            warehouse_size_m2 = st.number_input("Warehouse Size (m²)",     min_value=100.0,     max_value=100000.0,     value=current_warehouse_size,     step=100.0,     help="Enter the warehouse size in square meters." )
 # Update session state with the new value
-        st.session_state.warehouse_inputs['warehouse_size_m2'] = warehouse_size_m2
+    st.session_state.warehouse_inputs['warehouse_size_m2'] = warehouse_size_m2
             led_percentage = st.slider(
                 "LED Lighting Usage (%)",
                 0.0,
