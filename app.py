@@ -562,7 +562,7 @@ def main():
     if 'load_inputs' not in st.session_state:
         st.session_state.load_inputs = {'weight_tons': 10.0, 'vehicle_capacity_tons': 20.0, 'avg_trip_distance_km': 100.0}
     if 'energy_inputs' not in st.session_state:
-        st.session_state.energy_inputs = {'facility_size_m2': 1000.0,  # Float 'smart_system_usage': 0.5}
+        st.session_state.energy_inputs = {'facility_size_m2': 1000, 'smart_system_usage': 0.5}
 
     # Sidebar navigation
     with st.sidebar:
